@@ -18,10 +18,6 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 Require Import UniMath.CategoryTheory.DisplayedCats.Fibrations.
 
-
-Local Set Automatic Introduction.
-(* only needed since imports globally unset it *)
-
 Local Open Scope type_scope.
 Local Open Scope mor_disp_scope.
 
@@ -48,7 +44,7 @@ Proof.
   destruct XR as [c'' [i [xx' ii]]].
   set (YY := Y _ _ i xx').
   destruct YY as [ dd pe ].
-  mkpair.
+  use tpair.
   - apply dd.
   -
     (* now need disp_functor_on_iso_disp *)
@@ -66,7 +62,7 @@ Proof.
       etrans. Focus 2. apply functor_id.
       apply maponpaths. apply iso_after_iso_inv.
    }
-    set (XRT := transportf (fun r => iso_disp r (FF x dd) yy )
+    set (XRT := transportf (λ r, iso_disp r (FF x dd) yy )
                            XH).
     apply XRT.
     assumption.
@@ -432,7 +428,7 @@ Proof.
       etrans. apply assoc_disp.
       eapply transportf_bind.
       etrans. eapply cancel_postcomposition_disp.
-        refine (disp_nat_trans_ax η (# GG (ε x yy))). (*2*)
+        exact (disp_nat_trans_ax η (# GG (ε x yy))). (*2*)
       eapply transportf_bind.
       etrans. apply assoc_disp_var.
       eapply transportf_bind.
@@ -560,7 +556,7 @@ Definition FFinv_on_iso_is_iso   {x y} {xx : D' x} {yy : D' y} {f : iso x y}
   : is_iso_disp _ (FFinv ff).
 Proof.
   apply disp_functor_id_ff_reflects_isos.
-  refine (transportf _ _ Hff).
+  use (transportf _ _ Hff).
   apply @pathsinv0. use homotweqinvweq.
 Qed.
 
@@ -569,7 +565,7 @@ Qed.
 (* TODO: does [Local Definition] actually keep it local?  It seems not — e.g. [Print GG_data] still works after the section closes. Is there a way to actually keep them local?  If not, find less generic names for [GG] and its components. *)
 Local Definition GG_data : disp_functor_data (functor_identity _ ) D D'.
 Proof.
-  mkpair.
+  use tpair.
   + intros x xx. exact (pr1 (FF_split x xx)).
   + intros x y xx yy f ff; simpl.
     set (Hxx := FF_split x xx).
@@ -614,7 +610,7 @@ Proof.
           etrans. apply assoc_disp_var.
           apply maponpaths.
           etrans. apply maponpaths.
-            refine (iso_disp_after_inv_mor (pr2 (FF_split _ _))).
+            exact (iso_disp_after_inv_mor (pr2 (FF_split _ _))).
           etrans. apply mor_disp_transportf_prewhisker.
           etrans. apply maponpaths, id_right_disp.
           apply transport_f_f.
@@ -642,7 +638,7 @@ Definition GG : disp_functor _ _ _ := (_ ,, GG_ax).
 Definition ε_ses_ff_data
   : disp_nat_trans_data (nat_trans_id _ )
       (disp_functor_composite GG FF) (disp_functor_identity _ )
-:= fun x xx => (pr2 (FF_split x xx)).
+:= λ x xx, (pr2 (FF_split x xx)).
 
 Lemma ε_ses_ff_ax : disp_nat_trans_axioms ε_ses_ff_data.
 Proof.
@@ -673,7 +669,7 @@ Definition η_ses_ff_data
 Proof.
   intros x xx. cbn.
   apply FFinv.
-  refine (inv_mor_disp_from_iso (pr2 (FF_split _ _))).
+  exact (inv_mor_disp_from_iso (pr2 (FF_split _ _))).
 Defined.
 
 Definition η_ses_ff_ax
@@ -748,7 +744,7 @@ Qed.
 
 Theorem is_equiv_from_ff_ess_over_id : is_equiv_over_id FF.
 Proof.
-  simple refine ((GGεη,, _) ,, _).
+  use ((GGεη,, _) ,, _).
   split. apply tri_1_GGεη. apply tri_2_GGεη.
   apply form_equiv_GGεη.
 Defined.
@@ -822,7 +818,7 @@ Qed.
 
 Local Definition inv : disp_nat_trans (nat_trans_id _ ) GG FF.
 Proof.
-  mkpair.
+  use tpair.
   - intros x xx.
     apply (inv_mor_disp_from_iso (Ha _ _ )).
   - apply inv_ax.
@@ -875,14 +871,14 @@ Defined.
 
 Lemma form_equiv_inv_adjunction_data : form_equiv_over_id inv_adjunction_data.
 Proof.
-  cbn. mkpair.
+  cbn. use tpair.
     + intros. cbn.
       set (XR:= @is_iso_inv_from_is_iso_disp).
       specialize (XR _ D _  _ _ _ _ _ (  is_iso_counit_over_id (pr2 isEquiv) x xx)).
       cbn in XR.
       eapply is_iso_disp_independent_of_is_iso.
       apply XR.
-    + intros. cbn.
+    + cbn. intros.
       set (XR:= @is_iso_inv_from_is_iso_disp).
       specialize (XR _ D' _  _ _ _ _ _ (  is_iso_unit_over_id (pr2 isEquiv) x xx)).
       cbn in XR.
@@ -987,10 +983,10 @@ Qed.
 
 Definition equiv_inv : is_equiv_over_id GG.
 Proof.
-  mkpair.
-  - mkpair.
+  use tpair.
+  - use tpair.
     + exact (FF,, (η_inv,, ε_inv)).
-    + mkpair. cbn. apply inv_triangle_1_statement_over_id.
+    + use tpair. cbn. apply inv_triangle_1_statement_over_id.
       apply inv_triangle_2_statement_over_id.
   - apply form_equiv_inv_adjunction_data.
 Defined.
@@ -1018,20 +1014,20 @@ Proof.
   exists (fiber_functor GG _).
   exists (fiber_nat_trans η _,,
           fiber_nat_trans ε _).
-  mkpair; cbn.
+  use tpair; cbn.
   + unfold triangle_1_statement.
     intros d; cbn.
     set (thisax := pr1 axs c d); clearbody thisax; clear axs.
     etrans. apply maponpaths, thisax.
     etrans. apply transport_f_b.
-    refine (@maponpaths_2 _ _ _ _ _ (paths_refl _) _ _).
+    use (@maponpaths_2 _ _ _ _ _ (paths_refl _)).
     apply homset_property.
   + unfold triangle_2_statement.
     intros d; cbn.
     set (thisax := pr2 axs c d); clearbody thisax; clear axs.
     etrans. apply maponpaths, thisax.
     etrans. apply transport_f_b.
-    refine (@maponpaths_2 _ _ _ _ _ (paths_refl _) _ _).
+    use (@maponpaths_2 _ _ _ _ _ (paths_refl _)).
     apply homset_property.
 Defined.
 
@@ -1043,7 +1039,7 @@ Definition fiber_equiv {D D' : disp_cat C}
 Proof.
   exists (fiber_is_left_adj EFF c).
   destruct EFF as [[[GG [η ε]] tris] isos]; cbn in isos; cbn.
-  mkpair.
+  use tpair.
   + intros d.
     apply is_iso_fiber_from_is_iso_disp.
     apply (is_iso_unit_over_id isos).

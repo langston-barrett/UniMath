@@ -107,7 +107,7 @@ Defined.
 
 Definition prod_precategory_ob_mor (C D : precategory) : precategory_ob_mor.
   (* ob *) exists (C × D).
-  (* mor *) intros a b. refine (_ × _).
+  (* mor *) intros a b. use (_ × _).
     exact ((pr1 a) --> (pr1 b)). exact ((pr2 a) --> (pr2 b)).
 Defined.
 
@@ -226,7 +226,7 @@ Section Discrete_cats.
 
 Definition discrete_cat (X : hSet) : category.
 Proof.
-  refine (path_groupoid X _).
+  use (path_groupoid X).
     apply hlevelntosn, setproperty.
 Defined.
 
@@ -286,7 +286,7 @@ Defined.
 (* TODO: upstream; also perhaps reconsider implicit args of pr1_transportf to match this? *)
 Lemma pr2_transportf {A} {B1 B2 : A → UU}
     {a a' : A} (e : a = a') (xs : B1 a × B2 a)
-  : pr2 (transportf (fun a => B1 a × B2 a) e xs) = transportf _ e (pr2 xs).
+  : pr2 (transportf (λ a, B1 a × B2 a) e xs) = transportf _ e (pr2 xs).
 Proof.
   destruct e. apply idpath.
 Defined.

@@ -14,10 +14,6 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 Require Import UniMath.CategoryTheory.DisplayedCats.Fibrations.
 
-
-Local Set Automatic Introduction.
-(* only needed since imports globally unset it *)
-
 Local Open Scope type_scope.
 Local Open Scope mor_disp_scope.
 
@@ -44,7 +40,7 @@ Proof.
   destruct XR as [c'' [i [xx' ii]]].
   set (YY := Y _ _ i xx').
   destruct YY as [ dd pe ].
-  mkpair.
+  use tpair.
   - apply dd.
   -
     (* now need disp_functor_on_iso_disp *)
@@ -62,7 +58,7 @@ Proof.
       etrans. Focus 2. apply functor_id.
       apply maponpaths. apply iso_after_iso_inv.
    }
-    set (XRT := transportf (fun r => iso_disp r (FF x dd) yy )
+    set (XRT := transportf (λ r, iso_disp r (FF x dd) yy )
                            XH).
     apply XRT.
     assumption.
@@ -115,8 +111,8 @@ Coercion adj_equiv_of_precats_from_adj {A B : precategory} (E : adj_equiv A B)
 
 Coercion adj_from_adj_equiv {A B} (F : adj_equiv A B) : adjunction A B.
 Proof.
-  mkpair.
-  - mkpair.
+  use tpair.
+  - use tpair.
     + exact (pr1 F).
     + exists (right_adjoint F).
       exists (adjunit F).
@@ -127,7 +123,7 @@ Defined.
 
 Coercion equiv_from_adj_equiv {A B} (F : adj_equiv A B) : equivalence_of_precats A B.
 Proof.
-  mkpair.
+  use tpair.
   - exact F.
   - exists (pr1 (pr2 (pr2 F))).
     exact (pr2 (pr2 (pr2 F))).
@@ -370,7 +366,7 @@ Definition is_equiv_of_equiv_over {C C' : category} (E : adj_equiv C C')
            (EE : equiv_over E D D')
 : is_equiv_over E (left_adj_over EE).
 Proof.
-  mkpair.
+  use tpair.
   - apply (right_adjoint_of_disp_adjunction EE).
   - apply (axioms_of_equiv_over E EE).
 Defined.
@@ -433,7 +429,7 @@ Proof.
       etrans. apply assoc_disp.
       eapply transportf_bind.
       etrans. eapply cancel_postcomposition_disp.
-        refine (disp_nat_trans_ax η (# GG (ε x yy))). (*2*)
+        exact (disp_nat_trans_ax η (# GG (ε x yy))). (*2*)
       eapply transportf_bind.
       etrans. apply assoc_disp_var.
       eapply transportf_bind.
@@ -523,7 +519,7 @@ Let FFinv {x y} {xx} {yy} {f} : FF x xx -->[ (# F)%Cat f] FF y yy → xx -->[ f]
 Lemma FFinv_transportf
     {x y : C} {f f' : x --> y} (e : f = f')
     {xx : D x} {yy : D y} (ff : FF _ xx -->[(#F)%cat f] FF _ yy)
-  : FFinv (transportf (fun f' => _ -->[ (#F)%Cat f'] _ ) e ff) = transportf _ e (FFinv ff).
+  : FFinv (transportf (λ f', _ -->[ (#F)%Cat f'] _ ) e ff) = transportf _ e (FFinv ff).
 Proof.
   destruct e. apply idpath.
 Qed.
@@ -535,8 +531,8 @@ Definition disp_functor_id_ff_reflects_isos
   : is_iso_disp _ ff.
 Proof.
   set (FFffinv := inv_mor_disp_from_iso isiso).
-  set (FFffinv':= transportf (fun f' => _ -->[ _ ] _ ) (functor_on_inv_from_iso F f) FFffinv). cbn in FFffinv'. unfold precomp_with in FFffinv'.
-  set (FFffinv'' := transportf (fun f' => _ -->[f'] _ ) (id_right _ ) FFffinv').
+  set (FFffinv':= transportf (λ f', _ -->[ _ ] _ ) (functor_on_inv_from_iso F f) FFffinv). cbn in FFffinv'. unfold precomp_with in FFffinv'.
+  set (FFffinv'' := transportf (λ f', _ -->[f'] _ ) (id_right _ ) FFffinv').
   cbn in FFffinv''.
   set (ffinv := FFinv FFffinv'').
   exists ffinv.
@@ -578,7 +574,7 @@ Definition FFinv_on_iso_is_iso {x y} {xx : D x} {yy : D y} {f : iso x y}
   : is_iso_disp _ (FFinv ff).
 Proof.
   apply disp_functor_id_ff_reflects_isos.
-  refine (transportf _ _ Hff).
+  use (transportf _ _ Hff).
   apply @pathsinv0. use homotweqinvweq.
 Qed.
 
@@ -589,7 +585,7 @@ Qed.
 (*
 Local Definition GG_data : disp_functor_data (functor_identity _ ) D D'.
 Proof.
-  mkpair.
+  use tpair.
   + intros x xx. exact (pr1 (FF_split x xx)).
   + intros x y xx yy f ff; simpl.
     set (Hxx := FF_split x xx).
@@ -666,7 +662,7 @@ Definition GG : disp_functor _ _ _ := (_ ,, GG_ax).
 Definition ε_ses_ff_data
   : disp_nat_trans_data (nat_trans_id _ )
       (disp_functor_composite GG FF) (disp_functor_identity _ )
-:= fun x xx => (pr2 (FF_split x xx)).
+:= λ x xx, (pr2 (FF_split x xx)).
 *)
 (*
 Lemma ε_ses_ff_ax : disp_nat_trans_axioms ε_ses_ff_data.
@@ -857,7 +853,7 @@ Qed.
 
 Local Definition inv : disp_nat_trans (nat_trans_id _ ) GG FF.
 Proof.
-  mkpair.
+  use tpair.
   - intros x xx.
     apply (inv_mor_disp_from_iso (Ha _ _ )).
   - apply inv_ax.
@@ -910,7 +906,7 @@ Defined.
 
 Lemma form_equiv_inv_adjunction_data : form_equiv_over_id inv_adjunction_data.
 Proof.
-  cbn. mkpair.
+  cbn. use tpair.
     + intros. cbn.
       set (XR:= @is_iso_inv_from_is_iso_disp).
       specialize (XR _ D _  _ _ _ _ _ (  is_iso_counit_over_id (pr2 isEquiv) x xx)).
@@ -1022,10 +1018,10 @@ Qed.
 
 Definition equiv_inv : is_equiv_over_id GG.
 Proof.
-  mkpair.
-  - mkpair.
+  use tpair.
+  - use tpair.
     + exact (FF,, (η_inv,, ε_inv)).
-    + mkpair. cbn. apply inv_triangle_1_statement_over_id.
+    + use tpair. cbn. apply inv_triangle_1_statement_over_id.
       apply inv_triangle_2_statement_over_id.
   - apply form_equiv_inv_adjunction_data.
 Defined.
@@ -1055,12 +1051,12 @@ Definition fiber_is_left_adj
 : is_left_adjoint (fiber_functor FF c).
 Proof.
   destruct EFF as [[GG [η ε]] axs]; simpl in axs.
-  mkpair.
+  use tpair.
   set (XR := fiber_functor GG (left_functor A c)).
   exists (fiber_functor GG _).
   exists (fiber_nat_trans η _,
           fiber_nat_trans ε _).
-  mkpair; cbn.
+  use tpair; cbn.
   + unfold triangle_1_statement.
     intros d; cbn.
     set (thisax := pr1 axs c d); clearbody thisax; clear axs.
@@ -1086,7 +1082,7 @@ Definition fiber_equiv {D D' : disp_cat C}
 Proof.
   exists (fiber_is_left_adj EFF c).
   destruct EFF as [[[GG [η ε]] tris] isos]; cbn in isos; cbn.
-  mkpair.
+  use tpair.
   + intros d.
     apply is_iso_fiber_from_is_iso_disp.
     apply (is_iso_unit_over_id isos).

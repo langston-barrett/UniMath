@@ -58,15 +58,15 @@ Module Record_Preview.
         : mor_disp f xx yy -> mor_disp g yy zz -> mor_disp (f ;; g) xx zz
     ; id_left_disp {x y} {f : x --> y} {xx} {yy} (ff : mor_disp f xx yy)
         : comp_disp (id_disp xx) ff
-          = transportb (fun g => mor_disp g xx yy) (id_left _) ff
+          = transportb (λ g, mor_disp g xx yy) (id_left _) ff
     ; id_right_disp {x y} {f : x --> y} {xx} {yy} (ff : mor_disp f xx yy)
         : comp_disp ff (id_disp yy)
-          = transportb (fun g => mor_disp g xx yy) (id_right _) ff
+          = transportb (λ g, mor_disp g xx yy) (id_right _) ff
     ; assoc_disp {x y z w} {f : x --> y} {g : y --> z} {h : z --> w}
         {xx} {yy} {zz} {ww}
         (ff : mor_disp f xx yy) (gg : mor_disp g yy zz) (hh : mor_disp h zz ww)
         : comp_disp ff (comp_disp gg hh)
-          = transportb (fun k => mor_disp k _ _) (assoc _ _ _)
+          = transportb (λ k, mor_disp k _ _) (assoc _ _ _)
             (comp_disp (comp_disp ff gg) hh)
     ; homsets_disp {x y} {f : x --> y} {xx} {yy} : isaset (mor_disp f xx yy)
     }.
@@ -393,7 +393,7 @@ Proof.
     etrans. apply transport_f_f.
     etrans. apply maponpaths, id_left_disp.
     etrans. apply transport_f_f.
-    refine (@maponpaths_2 _ _ _ (transportf _) _ (idpath _) _ _).
+    use (@maponpaths_2 _ _ _ (transportf _) _ (idpath _)).
     apply homset_property.
 Qed.
 
@@ -428,7 +428,7 @@ Lemma transportf_iso_disp {C : category} {D : disp_cat C}
     {x y : C} {xx : D x} {yy}
     {f f' : iso x y} (e : f = f')
     (ff : iso_disp f xx yy)
-  : pr1 (transportf (fun g => iso_disp g _ _) e ff)
+  : pr1 (transportf (λ g, iso_disp g _ _) e ff)
   = transportf _ (maponpaths pr1 e) (pr1 ff).
 Proof.
   destruct e; apply idpath.
@@ -440,7 +440,7 @@ Definition is_iso_inv_from_iso_disp {C : category} {D : disp_cat_data C}
     :
     is_iso_disp (iso_inv_from_iso f) (inv_mor_disp_from_iso i).
 Proof.
-  mkpair.
+  use tpair.
   - change ( xx -->[ iso_inv_from_iso (iso_inv_from_iso f)] yy).
     set (XR := transportb (mor_disp xx yy )
                           (maponpaths pr1 (iso_inv_iso_inv _ _ _ f))).
@@ -487,9 +487,9 @@ Definition iso_disp_comp {C : category} {D : disp_cat C}
     :
     iso_disp (iso_comp f g) xx zz.
 Proof.
-  mkpair.
+  use tpair.
   - apply (ff ;; gg).
-  - mkpair.
+  - use tpair.
     + apply (transportb (mor_disp zz xx) (maponpaths pr1 (iso_inv_of_iso_comp _ _ _ _ f g))).
       cbn.
       apply (inv_mor_disp_from_iso gg ;; inv_mor_disp_from_iso ff).
@@ -499,7 +499,7 @@ Proof.
         etrans. apply maponpaths, maponpaths, maponpaths.
                 apply assoc_disp.
         etrans. apply maponpaths, maponpaths, maponpaths, maponpaths.
-                eapply (maponpaths (fun x => x ;; gg)).
+                eapply (maponpaths (λ x, x ;; gg)).
                 apply iso_disp_after_inv_mor.
         etrans. apply transport_f_f.
         etrans. apply maponpaths. apply mor_disp_transportf_prewhisker.
@@ -522,7 +522,7 @@ Proof.
         etrans. apply maponpaths, maponpaths, maponpaths.
                 apply assoc_disp.
         etrans. apply maponpaths, maponpaths, maponpaths, maponpaths.
-                eapply (maponpaths (fun x => x ;; inv_mor_disp_from_iso ff )).
+                eapply (maponpaths (λ x, x ;; inv_mor_disp_from_iso ff )).
                 apply inv_mor_after_iso_disp.
         etrans. apply maponpaths, maponpaths, maponpaths, maponpaths.
                  apply mor_disp_transportf_postwhisker.
@@ -582,7 +582,7 @@ Proof.
     set (XR := (pr1 (pr2 ff)) ;; X).
     set (XR' := transportf _ (assoc _ _ _   ) XR).
     set (XRRT := transportf _
-           (maponpaths (fun xyz => xyz · f') (iso_after_iso_inv f))
+           (maponpaths (λ xyz, xyz · f') (iso_after_iso_inv f))
            XR').
     set (XRRT' := transportf _ (id_left _ )
            XRRT).
@@ -626,9 +626,9 @@ Proof.
   use gradth.
   + intro X.
     set (XR := X ;; (pr1 (pr2 ii))).
-    set (XR' := transportf (fun x => _ -->[ x ] _) (!assoc _ _ _   ) XR).
-    set (XRRT := transportf (fun x => _ -->[ x ] _ )
-           (maponpaths (fun xyz => _ · xyz) (iso_inv_after_iso _ ))
+    set (XR' := transportf (λ x, _ -->[ x ] _) (!assoc _ _ _   ) XR).
+    set (XRRT := transportf (λ x, _ -->[ x ] _ )
+           (maponpaths (λ xyz, _ · xyz) (iso_inv_after_iso _ ))
            XR').
     set (XRRT' := transportf _ (id_right _ )
            XRRT).
@@ -686,7 +686,7 @@ Section Utilities.
 Lemma transportf_precompose_disp {C} {D : disp_cat C}
     {c d : C} (f : c --> d )
     {cc cc' : D c} (e : cc = cc') {dd} (ff : cc -->[f] dd)
-  : transportf (fun xx : D c => xx -->[f] dd) e ff
+  : transportf (λ xx : D c, xx -->[f] dd) e ff
   = transportf _ (id_left _)
     (iso_inv_from_iso_disp (idtoiso_disp (idpath _) (e)) ;; ff).
 Proof.
@@ -704,15 +704,15 @@ Definition precomp_with_iso_disp_is_inj
   : (ii ;; ff = ii ;; ff') -> ff = ff'.
 Proof.
   intros e.
-  simple refine (pathscomp0 _ _).
-  - refine (transportf _ _ ((iso_inv_from_iso_disp ii ;; ii) ;; ff)).
+  use pathscomp0.
+  - use (transportf _ _ ((iso_inv_from_iso_disp ii ;; ii) ;; ff)).
     etrans; [ apply maponpaths_2, iso_after_iso_inv | apply id_left ].
   - apply pathsinv0.
     etrans. eapply transportf_bind.
       eapply cancel_postcomposition_disp, (iso_disp_after_inv_mor ii).
     rewrite id_left_disp.
     etrans. apply transport_f_f.
-    refine (@maponpaths_2 _ _ _ _ _ (idpath _) _ _).
+    use (@maponpaths_2 _ _ _ _ _ (idpath _)).
     apply homset_property.
   - etrans. eapply transportf_bind, assoc_disp_var.
     rewrite e.
@@ -721,7 +721,7 @@ Proof.
       eapply cancel_postcomposition_disp, (iso_disp_after_inv_mor ii).
     rewrite id_left_disp.
     etrans. apply transport_f_f.
-    refine (@maponpaths_2 _ _ _ _ _ (idpath _) _ _).
+    use (@maponpaths_2 _ _ _ _ _ (idpath _)).
     apply homset_property.
 Qed.
 
@@ -801,7 +801,7 @@ Definition idtoiso_isotoid_disp
     {c c' : C} (e : c = c') {d : D c} {d'} (i : iso_disp (idtoiso e) d d')
   : idtoiso_disp e (isotoid_disp D_cat e i) = i.
 Proof.
-  refine (homotweqinvweq _ _).
+  use homotweqinvweq.
 Qed.
 
 Definition isotoid_idtoiso_disp
@@ -809,7 +809,7 @@ Definition isotoid_idtoiso_disp
     {c c' : C} (e : c = c') {d : D c} {d'} (ee : transportf _ e d = d')
   : isotoid_disp D_cat e (idtoiso_disp e ee) = ee.
 Proof.
-  refine (homotinvweqweq _ _).
+  use homotinvweqweq.
 Qed.
 
 End Univalent_Categories.
@@ -979,20 +979,20 @@ Definition is_iso_disp_from_total {xx yy : total_category}
     (ffi := isopair ff i)
   : is_iso_disp (iso_base_from_total (ff,,i)) (pr2 ff).
 Proof.
-  mkpair; [ | split].
+  use tpair; [ | split].
   - eapply transportb. apply inv_iso_base_from_total.
     exact (pr2 (inv_from_iso ffi)).
   - etrans. apply mor_disp_transportf_postwhisker.
     etrans. apply maponpaths, @pathsinv0.
       exact (fiber_paths (!iso_after_iso_inv ffi)).
     etrans. apply transport_f_f.
-    refine (toforallpaths _ _ _ _ (id_disp _)).
+    use (toforallpaths _ _ _ _ (id_disp _)).
     unfold transportb; apply maponpaths, homset_property.
   - etrans. apply mor_disp_transportf_prewhisker.
     etrans. apply maponpaths, @pathsinv0.
       exact (fiber_paths (!iso_inv_after_iso ffi)).
     etrans. apply transport_f_f.
-    refine (toforallpaths _ _ _ _ (id_disp _)).
+    use (toforallpaths _ _ _ _ (id_disp _)).
     unfold transportb; apply maponpaths, homset_property.
 Qed.
 
@@ -1046,7 +1046,7 @@ Qed.
 Definition total_iso_equiv_map {xx yy : total_category}
   : (∑ f : iso (pr1 xx) (pr1 yy), iso_disp f (pr2 xx) (pr2 yy))
   -> iso xx yy
-:= fun ff => total_iso (pr1 ff) (pr2 ff).
+:= λ ff, total_iso (pr1 ff) (pr2 ff).
 
 Definition total_iso_isweq (xx yy : total_category)
   : isweq (@total_iso_equiv_map xx yy).
@@ -1058,7 +1058,7 @@ Proof.
     + apply eq_iso_disp.
       etrans. apply transportf_iso_disp.
       simpl pr2. simpl (pr1 (iso_disp_from_total _)).
-      refine (@maponpaths_2 _ _ _ (transportf _) _ (idpath _) _ _).
+      use (@maponpaths_2 _ _ _ (transportf _) _ (idpath _)).
       apply homset_property.
   - intros f. apply eq_iso; simpl.
     destruct f as [[f ff] w]; apply idpath.
@@ -1081,10 +1081,10 @@ Proof.
     apply total2_paths_equiv.
   apply (@weqcomp _ (∑ e : x = y, iso_disp (idtoiso e) xx yy) _).
     apply weqfibtototal.
-    intros e. exists (fun ee => idtoiso_disp e ee).
+    intros e. exists (λ ee, idtoiso_disp e ee).
     apply DD.
   apply (@weqcomp _ (∑ f : iso x y, iso_disp f xx yy) _).
-    refine (weqfp (weqpair _ _) _). apply CC.
+    use (weqfp (weqpair _ _)). apply CC.
   apply total_iso_equiv.
   intros e; destruct e; apply eq_iso; cbn.
     apply idpath.
@@ -1109,7 +1109,7 @@ Context {C' C : category} (F : functor C' C) (D : disp_cat C).
 
 Definition reindex_disp_cat_ob_mor : disp_cat_ob_mor C'.
 Proof.
-  exists (fun c => D (F c)).
+  exists (λ c, D (F c)).
   intros x y xx yy f. exact (xx -->[# F f] yy).
 Defined.
 
@@ -1231,7 +1231,7 @@ Definition lifted_functor_data {C C' : category} {D : disp_cat C}
   {F : functor C' C} (FF : functor_lifting D F)
   : functor_data C' (total_category D).
 Proof.
-  exists (fun x => (F x ,, FF x)).
+  exists (λ x, (F x ,, FF x)).
   intros x y f. exists (# F f)%cat. exact (# FF f).
 Defined.
 
@@ -1384,7 +1384,7 @@ Definition disp_functor_composite_data
     (FF' : disp_functor F' D' D'')
   : disp_functor_data (functor_composite F F') D D''.
 Proof.
-  mkpair.
+  use tpair.
   + intros x xx. exact (FF' _ (FF _ xx)).
   + intros x y xx yy f ff. exact (# FF' (# FF ff)).
 Defined.
@@ -1420,7 +1420,7 @@ Definition disp_functor_composite
     (FF' : disp_functor F' D' D'')
   : disp_functor (functor_composite F F') D D''.
 Proof.
-  mkpair.
+  use tpair.
   - apply (disp_functor_composite_data FF FF').
   - apply disp_functor_composite_axioms.
 Defined.
@@ -1429,10 +1429,10 @@ Definition disp_functor_identity
     {C : category} (D : disp_cat C)
   : disp_functor (functor_identity _ ) D D.
 Proof.
-  mkpair.
-  - mkpair.
+  use tpair.
+  - use tpair.
     + intros; assumption.
-    + intros; assumption.
+    + cbn. intros. assumption.
   - split; simpl.
     + intros; apply idpath.
     + intros; apply idpath.
@@ -1522,7 +1522,7 @@ Section Functor_Properties.
 Definition disp_functor_ff {C C'} {F}
   {D : disp_cat C} {D' : disp_cat C'} (FF : disp_functor F D D')
 :=
-  ∏ {x y} {xx : D x} {yy : D y} {f : x --> y},
+  ∏ x y (xx : D x) (yy : D y) (f : x --> y),
     isweq (fun ff : xx -->[f] yy => # FF ff).
 
 Section ff_reflects_isos.
@@ -1605,7 +1605,7 @@ Definition disp_functor_ess_split_surj {C' C} {F}
   {D' : disp_cat C'} {D : disp_cat C} (FF : disp_functor F D D')
   : UU
 :=
-  ∏ {x} {xx : D' (F x)},
+  ∏ x (xx : D' (F x)),
     ∑ y : C,
     ∑ i : iso y x,
     ∑ yy : D y,
@@ -1615,7 +1615,7 @@ Definition disp_functor_disp_ess_split_surj {C' C} {F}
   {D' : disp_cat C'} {D : disp_cat C} (FF : disp_functor F D D')
   : UU
 :=
-  ∏ {x} {xx : D' (F x)},
+  ∏ x (xx : D' (F x)),
     ∑ (yy : D x),
       iso_disp (identity_iso _) (FF _ yy) xx.
 
@@ -1630,7 +1630,7 @@ Definition total_functor_data {C' C} {F}
     {D' : disp_cat C'} {D : disp_cat C} (FF : disp_functor F D' D)
   : functor_data (total_category D') (total_category D).
 Proof.
-  mkpair.
+  use tpair.
   - intros xx. exists (F (pr1 xx)). exact (FF _ (pr2 xx)).
   - intros xx yy ff. exists (# F (pr1 ff))%cat. exact (# FF (pr2 ff)).
 Defined.
@@ -1837,7 +1837,7 @@ Definition disp_nat_trans_id
   (R' : disp_functor_data F' D' D)
   : disp_nat_trans (nat_trans_id F') R' R'.
 Proof.
-  mkpair.
+  use tpair.
   - intros x xx.
     apply id_disp.
   - apply disp_nat_trans_id_ax.
@@ -1896,7 +1896,7 @@ Definition disp_nat_trans_comp
   (b : disp_nat_trans a R' R)
   : disp_nat_trans (nat_trans_comp _ _ _ a' a) R'' R.
 Proof.
-  mkpair.
+  use tpair.
   - intros x xx.
     apply (comp_disp (b' _ _ )  (b _ _ )).
   - apply disp_nat_trans_comp_ax.

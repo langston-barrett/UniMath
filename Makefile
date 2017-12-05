@@ -13,6 +13,7 @@ PACKAGES += MoreFoundations
 PACKAGES += Combinatorics
 PACKAGES += Algebra
 PACKAGES += NumberSystems
+PACKAGES += PAdics
 PACKAGES += CategoryTheory
 PACKAGES += Ktheory
 PACKAGES += Topology
@@ -32,7 +33,7 @@ COQBIN ?=
 all: check-first
 all: check-for-change-to-Foundations
 everything: TAGS all html install
-check-first: enforce-prescribed-ordering check-travis enforce-listing-of-proof-files
+check-first: enforce-prescribed-ordering check-travis
 
 COQIDE_OPTION := no
 
@@ -276,8 +277,8 @@ clean::; rm -f .check-travis.okay
 
 
 # here we ensure that every *.v file F in each package P is listed in the corresponding file UniMath/P/.package/files
-# except for one, which someone has to look at and fix or eliminate:
-GRANDFATHER_UNLISTED = UniMath/CategoryTheory/equivalences_lemmas.v
+# except for those listed in $GRANDFATHER_UNLISTED (currently none)
+GRANDFATHER_UNLISTED = 
 enforce-listing-of-proof-files:
 	@ if declare -A islisted 2>/dev/null ;										\
 	  then for i in $(VFILES) $(GRANDFATHER_UNLISTED) ;								\

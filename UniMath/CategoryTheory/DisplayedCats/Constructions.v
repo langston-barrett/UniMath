@@ -28,7 +28,7 @@ Section Auxiliary.
 
 (* TODO: perhaps upstream; consider name *)
 Lemma total2_reassoc_paths {A} {B : A → UU} {C : (∑ a, B a) -> UU}
-    (BC : A -> UU := fun a => ∑ b, C (a,,b))
+    (BC : A -> UU := λ a, ∑ b, C (a,,b))
     {a1 a2 : A} (bc1 : BC a1) (bc2 : BC a2)
     (ea : a1 = a2)
     (eb : transportf _ ea (pr1 bc1) = pr1 bc2)
@@ -42,7 +42,7 @@ Defined.
 
 (* TODO: as for non-primed version above *)
 Lemma total2_reassoc_paths' {A} {B : A → UU} {C : (∑ a, B a) -> UU}
-    (BC : A -> UU := fun a => ∑ b, C (a,,b))
+    (BC : A -> UU := λ a, ∑ b, C (a,,b))
     {a1 a2 : A} (bc1 : BC a1) (bc2 : BC a2)
     (ea : a1 = a2)
     (eb : pr1 bc1 = transportb _ ea (pr1 bc2))
@@ -145,7 +145,7 @@ Context {C : category} (D1 D2 : disp_cat C).
 
 Definition dirprod_disp_cat_ob_mor : disp_cat_ob_mor C.
 Proof.
-  exists (fun c => D1 c × D2 c).
+  exists (λ c, D1 c × D2 c).
   intros x y xx yy f.
   exact (pr1 xx -->[f] pr1 yy × pr2 xx -->[f] pr2 yy).
 Defined.
@@ -166,14 +166,14 @@ Definition dirprod_disp_cat_axioms
   : disp_cat_axioms _ dirprod_disp_cat_data.
 Proof.
   repeat apply tpair.
-  - intros. apply dirprod_paths; refine (id_left_disp @ !_).
-    + refine (pr1_transportf _ _ _ _ _ _ _).
+  - intros. apply dirprod_paths; use (id_left_disp @ !_).
+    + use pr1_transportf.
     + apply pr2_transportf.
-  - intros. apply dirprod_paths; refine (id_right_disp @ !_).
-    + refine (pr1_transportf _ _ _ _ _ _ _).
+  - intros. apply dirprod_paths; use (id_right_disp @ !_).
+    + use pr1_transportf.
     + apply pr2_transportf.
-  - intros. apply dirprod_paths; refine (assoc_disp @ !_).
-    + refine (pr1_transportf _ _ _ _ _ _ _).
+  - intros. apply dirprod_paths; use (assoc_disp @ !_).
+    + use pr1_transportf.
     + apply pr2_transportf.
   - intros. apply isaset_dirprod; apply homsets_disp.
 Qed.
@@ -184,7 +184,7 @@ Definition dirprod_disp_cat : disp_cat C
 Definition dirprodpr1_disp_functor_data
   : disp_functor_data (functor_identity C) dirprod_disp_cat (D1).
 Proof.
-  mkpair.
+  use tpair.
   - intros x xx; exact (pr1 xx).
   - intros x y xx yy f ff; exact (pr1 ff).
 Defined.
@@ -205,7 +205,7 @@ Definition dirprodpr1_disp_functor
 Definition dirprodpr2_disp_functor_data
   : disp_functor_data (functor_identity C) dirprod_disp_cat (D2).
 Proof.
-  mkpair.
+  use tpair.
   - intros x xx; exact (pr2 xx).
   - intros x y xx yy f ff; exact (pr2 ff).
 Defined.
@@ -237,7 +237,7 @@ Context {C : category}
 
 Definition sigma_disp_cat_ob_mor : disp_cat_ob_mor C.
 Proof.
-  exists (fun c => ∑ (d : D c), (E (c,,d))).
+  exists (λ c, ∑ (d : D c), (E (c,,d))).
   intros x y xx yy f.
   exact (∑ (fD : pr1 xx -->[f] pr1 yy),
                 (pr2 xx -->[f,,fD] pr2 yy)).
@@ -285,7 +285,7 @@ Definition sigma_disp_cat : disp_cat C
 Definition sigmapr1_disp_functor_data
   : disp_functor_data (functor_identity C) sigma_disp_cat D.
 Proof.
-  mkpair.
+  use tpair.
   - intros x xx; exact (pr1 xx).
   - intros x y xx yy f ff; exact (pr1 ff).
 Defined.
@@ -316,7 +316,7 @@ Qed.
 Lemma pr2_transportf_sigma_disp {x y : C} {f f' : x --> y} (e : f = f')
     {xxx : sigma_disp_cat x} {yyy} (fff : xxx -->[f] yyy)
   : pr2 (transportf _ e fff)
-  = transportf (fun ff => pr2 xxx -->[ff] _ ) (two_arg_paths_f (*total2_paths2*) e (! pr1_transportf_sigma_disp e fff))
+  = transportf (λ ff, pr2 xxx -->[ff] _ ) (two_arg_paths_f (*total2_paths2*) e (! pr1_transportf_sigma_disp e fff))
       (pr2 fff).
 Proof.
   destruct e. apply pathsinv0.
@@ -362,7 +362,7 @@ Proof.
         | apply pathsinv0, pr1_transportf_sigma_disp]).
     + etrans. Focus 2. apply @pathsinv0, pr2_transportf_sigma_disp.
       etrans. apply maponpaths.
-        refine (mor_disp_transportf_postwhisker
+        use (mor_disp_transportf_postwhisker
           (@inv_mor_total_iso _ _ (_,,_) (_,,_) f ffi) _ (pr2 fff)).
       etrans. apply functtransportf.
       etrans. apply transport_f_f.
@@ -375,7 +375,7 @@ Proof.
         | apply pathsinv0, pr1_transportf_sigma_disp ]).
     + etrans. Focus 2. apply @pathsinv0, pr2_transportf_sigma_disp.
       etrans. apply maponpaths.
-      refine (mor_disp_transportf_prewhisker
+      use (mor_disp_transportf_prewhisker
         (@inv_mor_total_iso _ _ (_,,_) (_,,_) f ffi) (pr2 fff) _).
       etrans. apply functtransportf.
       etrans. apply transport_f_f.
@@ -413,7 +413,7 @@ Definition sigma_disp_iso_map
   : (∑ ff : iso_disp f (pr1 xx) (pr1 yy),
        iso_disp (@total_iso _ _ (_,,_) (_,,_) f ff) (pr2 xx) (pr2 yy))
   -> iso_disp f xx yy
-:= fun ff => sigma_disp_iso _ _ (pr1 ff) (pr2 ff).
+:= λ ff, sigma_disp_iso _ _ (pr1 ff) (pr2 ff).
 
 Lemma sigma_disp_iso_isweq
     {x y} (xx : sigma_disp_cat x) (yy : sigma_disp_cat y)
@@ -437,7 +437,7 @@ Proof.
   intros x xx yy.
   use weqhomot.
   - destruct xx as [xx xxx], yy as [yy yyy].
-     use (@weqcomp _ (∑ ee : xx = yy, transportf (fun r => E (x,,r)) ee xxx = yyy) _ _ _).
+     use (@weqcomp _ (∑ ee : xx = yy, transportf (λ r, E (x,,r)) ee xxx = yyy) _ _ _).
       refine (total2_paths_equiv _ _ _).
     set (i := fun (ee : xx = yy) => (total2_paths2 (idpath _) ee)).
     apply @weqcomp with
@@ -454,19 +454,19 @@ Proof.
     apply @weqcomp with (∑ ee : xx = yy, iso_disp
          (@total_iso _ D (_,,_) (_,,_) _ (idtoiso_disp (idpath _) ee)) xxx yyy).
       apply weqfibtototal; intros ee.
-      mkpair.
-        refine (transportf (fun I => iso_disp I xxx yyy) _).
+      use tpair.
+        refine (transportf (λ I, iso_disp I xxx yyy) _).
         unfold i.
       (* TODO: maybe break out this lemma on [idtoiso]? *)
       (* Note: [abstract] here is to speed up a [cbn] below. *)
         destruct ee. abstract (apply eq_iso, idpath).
-      exact (isweqtransportf (fun I => iso_disp I xxx yyy) _).
+      exact (isweqtransportf (λ I, iso_disp I xxx yyy) _).
     apply (@weqcomp _ (∑ f : iso_disp (identity_iso x) xx yy,
                       (iso_disp (@total_iso _ D (_,,_) (_,,_) _ f) xxx yyy)) _).
       refine (weqfp (weqpair _ _) _). refine (DD _ _ (idpath _) _ _).
     apply (sigma_disp_iso_equiv (_,,_) (_,,_) _).
   - assert (lemma2 : forall i i' (e : i = i') ii,
-                 pr1 (transportf (fun i => iso_disp i (pr2 xx) (pr2 yy)) e ii)
+                 pr1 (transportf (λ i, iso_disp i (pr2 xx) (pr2 yy)) e ii)
                  = transportf _ (maponpaths pr1 e) (pr1 ii)).
       intros; destruct e; apply idpath.
     intros ee; apply eq_iso_disp.
@@ -508,7 +508,7 @@ Lemma foo
   (c' : C')
   (xx' : D' c')
   :
-  pr1 (transportf (fun x => disp_nat_trans x FF' FF) p b) c' xx' =
+  pr1 (transportf (λ x, disp_nat_trans x FF' FF) p b) c' xx' =
       transportf (mor_disp (FF' c' xx') (FF c' xx'))
            (nat_trans_eq_pointwise p _ )  (b c' xx').
 Proof.
@@ -618,14 +618,14 @@ Qed.
 Definition disp_functor_cat :
   disp_cat (FunctorsC'C).
 Proof.
-  mkpair.
-  - mkpair.
-    + mkpair.
+  use tpair.
+  - use tpair.
+    + use tpair.
       * intro F.
         apply (disp_functor F D' D).
       * simpl. intros F' F FF' FF a.
         apply (disp_nat_trans a FF' FF).
-    + mkpair.
+    + use tpair.
       * intros x xx.
         apply disp_nat_trans_id.
       * intros ? ? ? ? ? ? ? ? X X0. apply (disp_nat_trans_comp X X0 ).
@@ -677,7 +677,7 @@ Definition is_pointwise_iso_if_is_disp_functor_cat_iso
                           (pr1 FF _ xx' ).
 Proof.
   intros x' xx'.
-  mkpair.
+  use tpair.
   - set (X:= pr1 H). simpl in X.
     apply (transportb _ (pointwise_inv_is_inv_on f _ ) (X x' xx')).
   - simpl. repeat split.
@@ -801,7 +801,7 @@ Definition inv_disp_from_pointwise_iso
   :
        yy -->[ inv_from_iso f] xx.
 Proof.
-  mkpair.
+  use tpair.
   + intros x' xx'.
     simpl in xx. simpl in yy.
     assert (XR : inv_from_iso (pointwise_iso_from_nat_iso f x') =
@@ -825,7 +825,7 @@ Definition is_disp_functor_cat_iso_if_pointwise_iso
                           (pr1 FF _ xx' ))
   : is_iso_disp f FF.
 Proof.
-  mkpair.
+  use tpair.
   - apply (inv_disp_from_pointwise_iso _ _ _ _ _ FF H).
   - split.
     + apply subtypeEquality.
@@ -885,13 +885,13 @@ Context {C : category}
 
 Definition fiber_category_data : precategory_data.
 Proof.
-  mkpair.
-  - mkpair.
+  use tpair.
+  - use tpair.
     + apply (ob_disp D c).
     + intros xx xx'. apply (mor_disp xx xx' (identity c)).
-  - mkpair.
+  - use tpair.
     + intros. apply id_disp.
-    + intros. apply (transportf _ (id_right _ ) (comp_disp X X0)).
+    + cbn. intros. apply (transportf _ (id_right _ ) (comp_disp X X0)).
 Defined.
 
 Lemma fiber_is_precategory : is_precategory fiber_category_data.
@@ -928,10 +928,10 @@ Definition iso_disp_from_iso_fiber (a b : fiber_category) :
   iso a b -> iso_disp (identity_iso c) a b.
 Proof.
  intro i.
- mkpair.
+ use tpair.
  + apply (pr1 i).
  + cbn.
-   mkpair.
+   use tpair.
    * apply (inv_from_iso i).
    * abstract (  split;
        [ assert (XR := iso_after_iso_inv i);
@@ -952,11 +952,11 @@ Definition iso_fiber_from_iso_disp (a b : fiber_category) :
   iso a b <- iso_disp (identity_iso c) a b.
 Proof.
   intro i.
-  mkpair.
+  use tpair.
   + apply (pr1 i).
   + cbn in *.
     apply (@is_iso_from_is_z_iso fiber_category).
-    mkpair.
+    use tpair.
     apply (inv_mor_disp_from_iso i).
     abstract (split; cbn;
               [
@@ -1068,8 +1068,8 @@ Context {C C' : category} {D} {D'}
 
 Definition fiber_functor_data : functor_data D[{x}] D'[{F x}].
 Proof.
-  mkpair.
-  - apply (fun xx' => FF xx').
+  use tpair.
+  - apply (λ xx', FF xx').
   - intros xx' xx ff.
     apply (transportf _ (functor_id _ _ ) (# FF ff)).
 Defined.
@@ -1108,16 +1108,16 @@ Definition is_iso_fiber_from_is_iso_disp
 Proof.
   apply is_iso_from_is_z_iso.
   exists (pr1 Hff).
-  mkpair; cbn.
+  use tpair; cbn.
   + set (H := pr2 (pr2 Hff)).
     etrans. apply maponpaths, H.
     etrans. apply transport_f_b.
-    refine (@maponpaths_2 _ _ _ _ _ (paths_refl _) _ _).
+    use (@maponpaths_2 _ _ _ _ _ (paths_refl _)).
     apply homset_property.
   + set (H := pr1 (pr2 Hff)).
     etrans. apply maponpaths, H.
     etrans. apply transport_f_b.
-    refine (@maponpaths_2 _ _ _ _ _ (paths_refl _) _ _).
+    use (@maponpaths_2 _ _ _ _ _ (paths_refl _)).
     apply homset_property.
 Qed.
 

@@ -66,9 +66,9 @@ Definition mkBindingSig {I : UU} (h : isaset I) (f : I -> list nat) : BindingSig
 Definition SumBindingSig : BindingSig -> BindingSig -> BindingSig.
 Proof.
 intros s1 s2.
-mkpair.
+use tpair.
 - apply (BindingSigIndex s1 ⨿ BindingSigIndex s2).
-- mkpair.
+- use tpair.
   + apply (isasetcoprod _ _ (BindingSigIsaset s1) (BindingSigIsaset s2)).
   + induction 1 as [i|i]; [ apply (BindingSigMap s1 i) | apply (BindingSigMap s2 i) ].
 Defined.
@@ -116,7 +116,7 @@ Defined.
 Definition precomp_option_iter_Signature (BCC : BinCoproducts C)
   (TC : Terminal C) (n : nat) : Signature C hsC C hsC.
 Proof.
-  mkpair.
+  use tpair.
   - exact (precomp_option_iter BCC TC n).
   - destruct n; simpl.
     + apply θ_functor_identity.
@@ -176,8 +176,7 @@ Defined.
 Lemma is_omega_cocont_BindingSigToSignature
   (TC : Terminal C) (CLC : Colims_of_shape nat_graph C)
   (HF : ∏ (F : [C,C]), is_omega_cocont (constprod_functor1 F))
-  (sig : BindingSig)
-  (CC : Coproducts (BindingSigIndex sig) C) :
+  (sig : BindingSig) (CC : Coproducts (BindingSigIndex sig) C) :
   is_omega_cocont (BindingSigToSignature TC sig CC).
 Proof.
 apply is_omega_cocont_Sum_of_Signatures.
@@ -197,6 +196,17 @@ use colimAlgInitial.
 - apply (Initial_functor_precat _ _ IC).
 - apply (is_omega_cocont_Id_H _ _ _ _ Hs).
 - apply ColimsFunctorCategory_of_shape, CLC.
+Defined.
+
+(** ** Construction of datatype specified by a binding signature *)
+Definition DatatypeOfBindingSig
+  (IC : Initial C) (TC : Terminal C) (CLC : Colims_of_shape nat_graph C)
+  (HF : ∏ (F : [C,C]), is_omega_cocont (constprod_functor1 F))
+  (sig : BindingSig) (CC : Coproducts (BindingSigIndex sig) C) :
+  Initial (FunctorAlg (Id_H (BindingSigToSignature TC sig CC))).
+Proof.
+apply SignatureInitialAlgebra; trivial.
+now apply is_omega_cocont_BindingSigToSignature.
 Defined.
 
 Let HSS := @hss_precategory C hsC BCC.
