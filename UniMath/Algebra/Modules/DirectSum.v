@@ -38,4 +38,6 @@ Proof.
       apply module_mult_unel2.
 Defined.
 
+Notation "M ⊕ N" := (directsum M N) (at level 50) : module.
 
+Local Close Scope module.
