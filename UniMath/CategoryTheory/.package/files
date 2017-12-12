@@ -116,6 +116,7 @@ categories/rngs.v
 categories/commrngs.v
 categories/intdoms.v
 categories/flds.v
+categories/modules.v
 categories/StandardCategories.v
 Monads/Derivative.v
 DisplayedCats/Auxiliary.v
