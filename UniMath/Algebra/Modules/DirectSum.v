@@ -3,7 +3,6 @@
  - John Leo
  *)
 
-Add LoadPath "../../" as UniMath.
 Require Import UniMath.Algebra.Modules.Core.
 Require Import UniMath.Algebra.Monoids_and_Groups.
 Require Import UniMath.Algebra.Rigs_and_Rings.
