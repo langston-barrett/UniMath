@@ -474,21 +474,26 @@ Definition modulefun {R : rng} (M N : module R) : UU := ∑ f : M -> N, ismodule
 Definition modulefunpair {R : rng} {M N : module R} (f : M -> N) (is : ismodulefun f) :
   modulefun M N := tpair _ f is.
 
-Definition pr1modulefun {R : rng} {M N : module R} (f : modulefun M N) : M -> N := pr1 f.
+Section accessors.
+  Context {R : rng} {M N : module R} (f : modulefun M N).
+
+  Definition pr1modulefun : M -> N := pr1 f.
+  
+  Definition modulefun_ismodulefun : ismodulefun pr1modulefun := pr2 f.
+  
+  Definition modulefun_to_isbinopfun : isbinopfun pr1modulefun :=
+    pr1 modulefun_ismodulefun.
+
+  Definition modulefun_to_binopfun : binopfun M N :=
+    binopfunpair pr1modulefun modulefun_to_isbinopfun.
+
+  Definition modulefun_to_islinear : islinear pr1modulefun := pr2 modulefun_ismodulefun.
+
+  Definition modulefun_to_linearfun : linearfun M N :=
+    linearfunpair pr1modulefun modulefun_to_islinear.
+End accessors.
 
 Coercion pr1modulefun : modulefun >-> Funclass.
-
-Definition modulefun_to_isbinopfun {R : rng} {M N : module R} (f : modulefun M N) :
-  isbinopfun (pr1modulefun f) := pr1 (pr2 f).
-
-Definition modulefun_to_binopfun {R : rng} {M N : module R} (f : modulefun M N) : binopfun M N :=
-  binopfunpair (pr1modulefun f) (modulefun_to_isbinopfun f).
-
-Definition modulefun_to_islinear {R : rng} {M N : module R} (f : modulefun M N) :
-  islinear (pr1modulefun f) := pr2 (pr2 f).
-
-Definition modulefun_to_linearfun {R : rng} {M N : module R} (f : modulefun M N) : linearfun M N :=
-  linearfunpair f (modulefun_to_islinear f).
 
 Lemma ismodulefun_comp {R} {M N P : module R} (f : modulefun M N) (g : modulefun N P) :
   ismodulefun (g ∘ f)%functions.
@@ -516,7 +521,7 @@ Definition modulefun_to_monoidfun {R : rng} {M N : module R} (f : modulefun M N)
 tpair _ (pr1 f) (tpair _ (pr1 (pr2 f)) (modulefun_unel f)).
 
 Definition modulefun_from_monoidfun {R : rng} {M N : module R} (f : monoidfun M N)
-           (H : ismodulefun (pr1 f)) : modulefun M N :=
+          (H : ismodulefun (pr1 f)) : modulefun M N :=
 (tpair _ (pr1 f) H).
 
 Lemma modulefun_paths {R : rng} {M N : module R} {f g : modulefun M N} (p : pr1 f ~ pr1 g) :
