@@ -6,6 +6,7 @@ Require Import UniMath.Algebra.Rigs_and_Rings.
 Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.Algebra.Modules.
 Require Import UniMath.Algebra.Modules.Examples.
+Require Import UniMath.Algebra.Modules.DirectSum.
 
 (** ** Contents:
 
@@ -27,7 +28,7 @@ Definition mod_precategory_ob_mor : precategory_ob_mor :=
 
 Definition mod_precategory_data : precategory_data :=
   precategory_data_pair
-    mod_precategory_ob_mor (λ (M : module R), (idfun M,, id_modulefun M)) 
+    mod_precategory_ob_mor (λ (M : module R), (idfun M,, id_modulefun M))
     (fun M N P => @modulefun_comp R M N P).
 
 Definition is_precategory_mod_precategory_data :
@@ -209,3 +210,44 @@ Definition is_univalent_mod : is_univalent mod_precategory :=
 Definition univalent_category_mod_precategory : univalent_category := mk_category mod_precategory is_univalent_mod.
 
 End Mod.
+
+Section Binary_Products.
+
+  Local Open Scope cat.
+
+  Context {R : rng}.
+
+  Notation "X ⊕ Y" := (directsum X Y) (at level 50).
+
+  Definition mod_DirectSumPr1_def (M N : module R) : (M ⊕ N) -> M :=
+    λ mn : M ⊕ N, dirprod_pr1 mn.
+
+  Definition mod_DirectSumPr2_def (M N : module R) : (M ⊕ N) -> N :=
+    λ mn : M ⊕ N, dirprod_pr2 mn.
+
+  Lemma mod_DirectSumPr1_ismodulefun (M N : module R) :
+    @ismodulefun R (M ⊕ N) M (mod_DirectSumPr1_def M N).
+  Proof.
+    unfold ismodulefun.
+    split;
+      intros ? ?;
+      apply idpath.
+  Defined.
+
+  Lemma mod_DirectSumPr2_ismodulefun (M N : module R) :
+    @ismodulefun R (M ⊕ N) N (mod_DirectSumPr2_def M N).
+  Proof.
+  Proof.
+    unfold ismodulefun.
+    split;
+      intros ? ?;
+      apply idpath.
+  Defined.
+
+  Definition mod_DirectSumPr1 (M N : module R) : mod_category⟦M ⊕ N, M⟧ :=
+    (mod_DirectSumPr1_def M N,, mod_DirectSumPr1_ismodulefun M N).
+
+  Definition mod_DirectSumPr2 (M N : module R) : mod_category⟦M ⊕ N, N⟧ :=
+    (mod_DirectSumPr2_def M N,, mod_DirectSumPr2_ismodulefun M N).
+
+End Binary_Products.
