@@ -136,7 +136,7 @@ Defined.
 Lemma iso_moduleiso (M N : ob mod_precategory) : iso M N -> moduleiso M N.
 Proof.
    intro f.
-   use moduleisopair.
+   use mk_moduleiso.
    - use weqpair.
      + exact (pr1modulefun (morphism_from_iso _ _ _ f)).
      + exact (iso_isweq f).
@@ -144,7 +144,7 @@ Proof.
 Defined.
 
 Lemma moduleiso_is_iso {M N : ob mod_precategory} (f : moduleiso M N) :
-  @is_iso _ M N (moduleiso_to_modulefun _ _ f).
+  @is_iso _ M N (moduleiso_to_modulefun f).
 Proof.
    apply (is_iso_qinv (C:= mod_precategory) _ (modulefunpair (invmoduleiso f) (pr2 (invmoduleiso f)))).
    split; use total2_paths_f.
@@ -161,7 +161,7 @@ Lemma moduleiso_iso (M N : ob mod_precategory) : moduleiso M N -> iso M N.
 Proof.
    intro f.
    use isopair.
-   - exact (moduleiso_to_modulefun _ _ f).
+   - exact (moduleiso_to_modulefun f).
    - exact (moduleiso_is_iso f).
 Defined.
 
