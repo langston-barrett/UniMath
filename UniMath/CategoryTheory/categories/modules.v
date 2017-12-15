@@ -7,7 +7,12 @@ Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.Algebra.Modules.
 Require Import UniMath.Algebra.Modules.Examples.
 Require Import UniMath.Algebra.Modules.DirectSum.
+
+(** Additive structure*)
 Require Import UniMath.CategoryTheory.limits.zero.
+Require Import UniMath.CategoryTheory.limits.bincoproducts.
+Require Import UniMath.CategoryTheory.limits.binproducts.
+Require Import UniMath.CategoryTheory.limits.BinDirectSums.
 
 (** * Contents:
 
@@ -17,7 +22,10 @@ Require Import UniMath.CategoryTheory.limits.zero.
  - Zero object and zero arrow
  - Preadditive structure
  - Additive structure
->>>>>>> module-category
+  - Binary direct sum
+   - Binary products
+   - Binary coproducts
+   - Binary direct sum
 *)
 
 Section Mod.
@@ -61,9 +69,9 @@ Defined.
 Definition mod_precategory : precategory :=
   mk_precategory (mod_precategory_data) (is_precategory_mod_precategory_data).
 
-Definition has_homsets_mod : has_homsets mod_precategory := isasetmodulefun.
+Definition mod_has_homsets : has_homsets mod_precategory := isasetmodulefun.
 
-Definition mod_category : category := category_pair mod_precategory has_homsets_mod.
+Definition mod_category : category := category_pair mod_precategory mod_has_homsets.
 
 Definition mor_to_modulefun {M N : ob mod_category} : mod_category⟦M, N⟧ -> modulefun M N := idfun _.
 
@@ -201,7 +209,7 @@ Proof.
 Defined.
 
 Definition is_univalent_mod : is_univalent mod_precategory :=
-  mk_is_univalent mod_precategory_idtoiso_isweq has_homsets_mod.
+  mk_is_univalent mod_precategory_idtoiso_isweq mod_has_homsets.
 
 Definition univalent_category_mod_precategory : univalent_category := mk_category mod_precategory is_univalent_mod.
 
@@ -244,38 +252,16 @@ Definition mod_category_Zero : Zero mod_category :=
 
 (** ** Preadditive structure *)
 
-Section Binary_Products.
+(** ** Additive structure *)
 
-  Local Open Scope cat.
+(** *** Binary direct sum *)
 
-  Context {R : rng}.
+Section Binary_DirectSum.
+  Local Open Scope module.
 
-  Notation "X ⊕ Y" := (directsum X Y) (at level 50).
-
-  Definition mod_DirectSumPr1_def (M N : module R) : (M ⊕ N) -> M :=
-    λ mn : M ⊕ N, dirprod_pr1 mn.
-
-  Definition mod_DirectSumPr2_def (M N : module R) : (M ⊕ N) -> N :=
-    λ mn : M ⊕ N, dirprod_pr2 mn.
-
-  Lemma mod_DirectSumPr1_ismodulefun (M N : module R) :
-    @ismodulefun R (M ⊕ N) M (mod_DirectSumPr1_def M N).
-  Proof.
-    unfold ismodulefun.
-    split;
-      intros ? ?;
-      apply idpath.
-  Defined.
-
-  Lemma mod_DirectSumPr2_ismodulefun (M N : module R) :
-    @ismodulefun R (M ⊕ N) N (mod_DirectSumPr2_def M N).
-  Proof.
-  Proof.
-    unfold ismodulefun.
-    split;
-      intros ? ?;
-      apply idpath.
-  Defined.
+  Local Notation "x + y" := (@op (_ ⊕ _) x y).
+  Local Notation "( x , y )" := (dirprodpair x y).
+  Local Notation "0" := (unel _).
 
   Definition mod_DirectSumPr1 (M N : module R) : mod_category⟦M ⊕ N, M⟧ :=
     (mod_DirectSumPr1_def M N,, mod_DirectSumPr1_ismodulefun M N).
@@ -283,9 +269,175 @@ Section Binary_Products.
   Definition mod_DirectSumPr2 (M N : module R) : mod_category⟦M ⊕ N, N⟧ :=
     (mod_DirectSumPr2_def M N,, mod_DirectSumPr2_ismodulefun M N).
 
-End Binary_Products.
+  Definition mod_DirectSumIn1 (M N : module R) : mod_category⟦M, M ⊕ N⟧ :=
+    (mod_DirectSumIn1_def M N,, mod_DirectSumIn1_ismodulefun M N).
 
-(** ** Additive structure *)
+  Definition mod_DirectSumIn2 (M N : module R) : mod_category⟦N, M ⊕ N⟧ :=
+    (mod_DirectSumIn2_def M N,, mod_DirectSumIn2_ismodulefun M N).
+
+  (** A projection following an injection is the identity if they have the same
+      indices, or the zero map otherwise; that is,
+
+        pr_i ∘ in_j = id     if i = j
+        pr_i ∘ in_j = 0      if i ≠ j
+   *)
+
+  Local Definition moduleiso_to_morphism {M N} (f : moduleiso M N) :
+    mod_category⟦M, N⟧ := (pr1modulefun (moduleiso_to_modulefun f),,
+                                        moduleiso_ismodulefun f).
+
+  Lemma mod_DirectSumIdIn1 (M N : module R) :
+    mod_DirectSumIn1 M N · mod_DirectSumPr1 M N = moduleiso_to_morphism (idmoduleiso M).
+  Proof.
+    use modulefun_paths. intro. use idpath.
+  Defined.
+
+  Lemma mod_DirectSumIdIn2 (M N : module R) :
+    mod_DirectSumIn2 M N · mod_DirectSumPr2 M N = moduleiso_to_morphism (idmoduleiso N).
+  Proof.
+    use modulefun_paths. intro. use idpath.
+  Defined.
+
+  Lemma mod_DirectSumUnel1 (M N : module R) :
+    mod_DirectSumIn1 M N · mod_DirectSumPr2 M N = unelmodulefun M N.
+  Proof.
+    use modulefun_paths. intro. use idpath.
+  Defined.
+
+  Lemma mod_DirectSumUnel2 (M N : module R) :
+    mod_DirectSumIn2 M N · mod_DirectSumPr1 M N = unelmodulefun N M.
+  Proof.
+    use modulefun_paths. intro. use idpath.
+  Defined.
+
+  (** *** Binary coproducts *)
+
+  (** The left-hand side of the coproduct diagram commutes *)
+  Lemma mod_BinCoproductCocone_beta1 {M N O : module R}
+        (f : mod_category⟦M, O⟧) (g : mod_category⟦N, O⟧) :
+        mod_DirectSumIn1 _ _ · mod_directsum_inducedarrow_out f g = f.
+  Proof.
+    apply modulefun_paths.
+    intro; unfold compose, funcomp; cbn.
+    rewrite modulefun_unel.
+    now rewrite (runax (pr1module O)).
+  Defined.
+
+  (** The right-hand side of the coproduct diagram commutes *)
+  Lemma mod_BinCoproductCocone_beta2 {M N O : module R}
+        (f : mod_category⟦M, O⟧) (g : mod_category⟦N, O⟧) :
+        mod_DirectSumIn2 _ _ · mod_directsum_inducedarrow_out f g = g.
+  Proof.
+    apply modulefun_paths.
+    intro; unfold compose, funcomp; cbn.
+    rewrite modulefun_unel.
+    now rewrite (lunax (pr1module O)).
+  Defined.
+
+  Lemma mod_BinCoproductCocone_eta {M N O : module R}
+        (f : mod_category⟦M, O⟧) (g : mod_category⟦N, O⟧) (h : mod_category ⟦M ⊕ N, O⟧)
+        (h_beta1 : mod_DirectSumIn1 _ _ · h = f) (h_beta2 : mod_DirectSumIn2 _ _ · h = g) :
+          h = mod_directsum_inducedarrow_out f g.
+  Proof.
+    apply modulefun_paths.
+    intro x; cbn.
+
+    assert (xeq : x = (pr1 x, 0) + (0, pr2 x)).
+    {
+      induction x as [m n].
+      cbn.
+      rewrite (@lunax N).
+      rewrite (@runax M).
+      reflexivity.
+    }
+    refine (maponpaths (pr1 h) xeq @ _).
+    induction x as [m n]; cbn.
+
+    rewrite <- h_beta1, <- h_beta2.
+    unfold compose; cbn; unfold funcomp; cbn.
+    induction h as [h h_is_modulefun]; cbn.
+    rewrite <- (binopfunisbinopfun (modulefun_to_binopfun (h,, h_is_modulefun)) _).
+    reflexivity.
+  Defined.
+
+  Lemma mod_isBinCoproductCocone (M N : module R) :
+    isBinCoproductCocone mod_category M N (M ⊕ N)
+                         (mod_DirectSumIn1 _ _) (mod_DirectSumIn2 _ _).
+  Proof.
+    use (mk_isBinCoproductCocone _ mod_has_homsets).
+    intros O f g.
+    use iscontrpair.
+    - refine (mod_directsum_inducedarrow_out f g,, _); split.
+      * exact (mod_BinCoproductCocone_beta1 f g).
+      * exact (mod_BinCoproductCocone_beta2 f g).
+    - intros t.
+      induction t as [h h_beta]; induction h_beta as [h_beta1 h_beta2].
+      use total2_paths_f; cbn.
+      * exact (mod_BinCoproductCocone_eta f g h h_beta1 h_beta2).
+      * use proofirrelevance.
+        use isapropdirprod;
+          apply (setproperty (mod_precategory ⟦_, O⟧,, mod_has_homsets _ O)).
+  Defined.
+
+  (** *** Binary products *)
+
+  (** The left-hand side of the product diagram commutes *)
+  Lemma mod_BinProductCone_beta1 {M N O : module R}
+        (f : mod_category⟦O, M⟧) (g : mod_category⟦O, N⟧) :
+    (mod_directsum_inducedarrow_in f g : mod_category⟦O, M ⊕ N⟧) ·
+      mod_DirectSumPr1 _ _ = f.
+  Proof.
+    apply modulefun_paths.
+    intro; unfold compose, funcomp; cbn.
+    reflexivity.
+  Defined.
+
+  (** The right-hand side of the coproduct diagram commutes *)
+  Lemma mod_BinProductCone_beta2 {M N O : module R}
+        (f : mod_category⟦O, M⟧) (g : mod_category⟦O, N⟧) :
+    (mod_directsum_inducedarrow_in f g : mod_category⟦O, M ⊕ N⟧) ·
+      mod_DirectSumPr2 _ _ = g.
+  Proof.
+    apply modulefun_paths.
+    intro; unfold compose, funcomp; cbn.
+    reflexivity.
+  Defined.
+
+  Lemma mod_BinProductCone_eta {M N O : module R}
+        (f : mod_category⟦O, M⟧) (g : mod_category⟦O, N⟧) (h : mod_category ⟦O, M ⊕ N⟧)
+        (h_beta1 : h · mod_DirectSumPr1 _ _ = f)
+        (h_beta2 : h · mod_DirectSumPr2 _ _ = g) : 
+          h = mod_directsum_inducedarrow_in f g.
+  Proof.
+    apply modulefun_paths.
+    intro x.
+    unfold mod_directsum_inducedarrow_in; cbn.
+    rewrite <- h_beta1, <- h_beta2.
+    reflexivity.
+  Defined.
+
+  Lemma mod_isBinProductCone (M N : module R) :
+    isBinProductCone mod_category M N (M ⊕ N)
+                         (mod_DirectSumPr1 _ _) (mod_DirectSumPr2 _ _).
+  Proof.
+    use (mk_isBinProductCone _ mod_has_homsets).
+    intros O f g.
+    use iscontrpair.
+    - refine (mod_directsum_inducedarrow_in f g,, _); split.
+      * exact (mod_BinProductCone_beta1 f g).
+      * exact (mod_BinProductCone_beta2 f g).
+    - intros t.
+      induction t as [h h_beta]; induction h_beta as [h_beta1 h_beta2].
+      use total2_paths_f; cbn.
+      * exact (mod_BinProductCone_eta f g h h_beta1 h_beta2).
+      * use proofirrelevance.
+        use isapropdirprod;
+          apply (setproperty (mod_precategory ⟦O, _⟧,, mod_has_homsets O _)).
+  Defined.
+
+  (** *** Binary direct sum *)
+
+End Binary_DirectSum.
+
 
 End Mod.
->>>>>>> module-category
