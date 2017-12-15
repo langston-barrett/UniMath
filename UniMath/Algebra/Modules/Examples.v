@@ -31,7 +31,7 @@ Proof. easy. Defined.
 (** The identity function is a morphism of modules *)
 Definition idmoduleiso {R : rng} (M : module R) : moduleiso M M.
 Proof.
-   use moduleisopair.
+   use mk_moduleiso.
    - exact (idweq (pr1module M)).
    - apply dirprodpair.
      + intros x y. apply idpath.
@@ -82,6 +82,14 @@ Defined.
 (** An important special case: a ring is a module over itself *)
 Definition ring_is_module (R : rng) : module R :=
   ringfun_module (rigisotorigfun (idrigiso R)).
+
+(** The zero module is the unique R-module structure on the zero group (the
+    group with a single element) *)
+Definition zero_module (R : rng) : module R.
+  refine (unitabgr,, _).
+  apply (@mult_to_module_struct _ _ (λ _ u, u));
+    easy.
+Defined.
 
 (** *** Bimodules *)
 
