@@ -19,7 +19,7 @@ Contents :
 - From a functor on a product of precategories to a functor on one of
   the categories by fixing the argument in the other component
 
-By PLL:
+By Peter LeFanu Lumsdaine:
 
 - Definition of the unit precategory
 

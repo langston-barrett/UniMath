@@ -136,3 +136,4 @@ Require Export UniMath.CategoryTheory.DisplayedCats.Codomain.
 Require Export UniMath.CategoryTheory.DisplayedCats.SIP.
 Require Export UniMath.CategoryTheory.DisplayedCats.Limits.
 Require Export UniMath.CategoryTheory.DisplayedCats.Examples.
+Require Export UniMath.CategoryTheory.Monoidal.Core.

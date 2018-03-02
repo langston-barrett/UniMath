@@ -6,9 +6,10 @@ Direct implementation of binary products together with:
 - Definition of a binary product structure on a functor category by taking pointwise binary products
   in the target category ([BinProducts_functor_precat])
 - Binary products from limits ([BinProducts_from_Lims])
+- Associativity isomorphisms
 
 Written by: Benedikt Ahrens, Ralph Matthes
-Extended by: Anders Mörtberg and Tomi Pannila
+Extended by: Anders Mörtberg, Tomi Pannila, Langston Barrett
 
 *)
 
@@ -644,3 +645,26 @@ Section BinProduct_from_iso.
                                               (iso_to_isBinProduct BP i).
 
 End BinProduct_from_iso.
+
+Section BinProdAssoc.
+  Context {C : precategory} {bp : BinProducts C}.
+  Local Notation "c ⊗ d" := (BinProductObject C (bp c d)) (at level 75) : cat.
+  Let π1 {x y} : C⟦x ⊗ y,x⟧ := BinProductPr1 _ (bp x y).
+  Let π2 {x y} : C⟦x ⊗ y,y⟧ := BinProductPr2 _ (bp x y).
+
+  Definition binprod_assoc (x y z : C) : C⟦(x ⊗ y) ⊗ z, x ⊗ (y ⊗ z)⟧ :=
+    BinProductArrow _ _ (π1 · π1) (BinProductArrow _ _ (π1 · π2) π2).
+
+  Definition binprod_assoc' (x y z : C) : C⟦x ⊗ (y ⊗ z), (x ⊗ y) ⊗ z⟧ :=
+    BinProductArrow _ _ (BinProductArrow _ _ π1 (π2 · π1) ) (π2 · π2) .
+
+  (*
+  Lemma binprod_assoc_is_iso : ∏ x y z, is_iso (binprod_assoc x y z).
+    intros x y z w.
+    use is_iso_qinv.
+    - apply binprod_assoc'.
+    - unfold is_inverse_in_precat.
+      use dirprodpair.
+      + unfold binprod_assoc, binprod_assoc'.
+  *)
+End BinProdAssoc.
