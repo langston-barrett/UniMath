@@ -19,6 +19,35 @@ Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 
 Local Open Scope cat.
 
+(** The constructions after this section are made easier by observing that arrows in
+    [type_precat] are actually functions, and we can ask for homotopties between
+    them, rather than equalities. *)
+Section HomotopyCones.
+
+  Context {g : graph}.
+
+  (** Compare to [cone]. *)
+  Definition homot_cone (d : diagram g type_precat) (c : type_precat) : UU :=
+    ∑ (f : ∏ (v : vertex g), type_precat⟦c,dob d v⟧),
+      ∏ (u v : vertex g) (e : edge u v), f u · dmor d e ~ f v.
+
+  Definition mk_homot_cone {d : diagram g type_precat} {c : type_precat}
+             (f : ∏ v, type_precat⟦c, dob d v⟧)
+             (Hf : ∏ u v (e : edge u v), f u · dmor d e ~ f v) : homot_cone d c :=
+    tpair _ f Hf.
+
+  (** These types are equivalent because they are almost identical, that their
+      last components are equivalent is due to [weqtoforallpaths]. *)
+  Lemma homot_cone_weq_cone (d : diagram g type_precat) (c : type_precat) :
+    homot_cone d c ≃ cone d c.
+  Proof.
+    unfold homot_cone, cone.
+    use weqfibtototal; intro f.
+    do 3 (use weqonsecfibers; intro).
+    apply invweq, weqtoforallpaths.
+  Defined.
+End HomotopyCones.
+
 Section StandardLimits.
 
   Context {g : graph} (d : diagram g type_precat).
@@ -29,16 +58,18 @@ Section StandardLimits.
 
   (** The condition that [standard_limit] is a cone is basically a rephrasing of
       its definition. *)
-  Lemma type_cone : cone d standard_limit.
-    use mk_cone; cbn.
+  Lemma standard_homot_cone : homot_cone d standard_limit.
+    use mk_homot_cone; cbn.
     - exact (λ n l, pr1 l n).
-    - intros u v f.
-      apply funextsec; intro l; unfold funcomp; cbn.
-      apply (pr2 l).
+    - intros ? ? ? l; apply (pr2 l).
   Defined.
 
+  Definition standard_cone : cone d standard_limit :=
+    homot_cone_weq_cone _ _ standard_homot_cone.
 End StandardLimits.
 
+(** The following lemma characterizes paths in the type of standard limits.
+    It isn't used in the rest of this file, but might be nice to have. *)
 Section StandardLimitHomot.
 
   Context {g : graph} {d : diagram g type_precat} (x y : standard_limit d).
@@ -50,7 +81,7 @@ Section StandardLimitHomot.
         (maponpaths (dmor d ed) (h u) @ (pr2 y _ _) ed = pr2 x _ _ ed @ (h v)).
 
   (** Such homotopies can be made into paths *)
-  Lemma type_cone_homot_to_path (h : standard_limit_homot) : x = y.
+  Lemma standard_cone_homot_to_path (h : standard_limit_homot) : x = y.
   Proof.
     apply (total2_paths_f (funextsec _ _ _ (pr1 h))).
 
@@ -78,16 +109,13 @@ Section StandardLimitHomot.
   Defined.
 End StandardLimitHomot.
 
-(** The canonical cone given by an arrow X → Y where Y has a cone *)
-
-Definition into_cone_to_cone {X Y : UU} {g : graph} {d : diagram g _}
-            (coneY : cone d (Y : ob type_precat)) (f : X → Y) : cone d X.
-  use mk_cone.
+(** The canonical homotopy cone given by an arrow X → Y where Y has a homotopy cone. *)
+Definition into_homot_cone_to_homot_cone {X Y : UU} {g : graph} {d : diagram g _}
+            (coneY : homot_cone d (Y : ob type_precat)) (f : X → Y) : homot_cone d X.
+  use mk_homot_cone.
   - intro ver.
     exact (pr1 coneY ver ∘ (f : type_precat ⟦ X, Y ⟧)).
-  - intros ver1 ver2 ed; cbn.
-    apply funextsec; intro x.
-    apply (toforallpaths _ _ _ (pr2 coneY ver1 ver2 ed)).
+  - intros ? ? ? ?; apply (pr2 coneY).
 Defined.
 
 Section StandardLimitUP.
@@ -96,18 +124,21 @@ Section StandardLimitUP.
 
   (** A rephrasing of the universal property: the canonical map that makes a
       cone out of a map X → L is an equivalence. *)
-  Definition is_limit_cone {L} (C : cone d L) :=
-    ∏ (X : UU), isweq (@into_cone_to_cone X L g d C).
+  Definition is_limit_homot_cone {L} (C : homot_cone d L) :=
+    ∏ (X : UU), isweq (@into_homot_cone_to_homot_cone X L g d C).
 
-  Lemma isaprop_isLimCone {L} (C : cone d L) : isaprop (is_limit_cone C).
+  Definition limit_homot_cone (L : UU) := ∑ C : homot_cone d L, is_limit_homot_cone C.
+
+  Lemma isaprop_is_homot_limit_cone {L} (C : homot_cone d L) :
+    isaprop (is_limit_homot_cone C).
   Proof.
-    repeat (apply impred; intro).
+    do 2 (apply impred; intro).
     apply isapropiscontr.
   Qed.
 
   (** A weak equivalence expressing the above universal property. *)
-  Definition limit_up_weq {X L} {C : cone d L} {is : is_limit_cone C} :
-    (X → L) ≃ cone d X := weqpair (into_cone_to_cone C) (is X).
+  Definition limit_homot_up_weq {X L} {C : homot_cone d L} {is : is_limit_homot_cone C} :
+    (X → L) ≃ homot_cone d X := weqpair (into_homot_cone_to_homot_cone C) (is X).
 
   (** The universal property of a limit.
 
@@ -115,39 +146,24 @@ Section StandardLimitUP.
       - Generalizes Lemma 10 in Ahrens, Capriotti, and Spadotti
       - Generalizes univ-iso in HoTT/M-types
   *)
-  Lemma limit_universal : is_limit_cone (type_cone d).
+  Lemma limit_homot_universal : is_limit_homot_cone (standard_homot_cone d).
     intro X.
     use isweq_iso.
     - intros xcone x.
       unfold standard_limit.
       use tpair.
       + exact (λ ver, pr1 xcone ver x).
-      + intros ver1 ver2 ed.
-        apply (toforallpaths _ _ _ (pr2 xcone _ _ _)).
-    - intros f.
-      apply funextfun; intro xcone.
-      use total2_paths_f; cbn; [reflexivity|].
-      cbn; unfold idfun.
-      apply funextsec; intro ver1.
-      apply funextsec; intro ver2.
-      apply funextsec; intro ed.
-      do 2 (rewrite toforallpaths_funextsec).
-      reflexivity.
-    - intro conex.
-      unfold into_cone_to_cone; cbn.
-      use total2_paths_f; cbn.
-      + reflexivity.
-      + apply funextsec; intro ver1.
-        apply funextsec; intro ver2.
-        apply funextsec; intro ed.
-        unfold funcomp; cbn; unfold idfun.
-        rewrite toforallpaths_funextsec; cbn.
-        rewrite funextsec_toforallpaths.
-        reflexivity.
+      + intros ? ? ?; apply (pr2 xcone).
+    - reflexivity.
+    - reflexivity.
   Defined.
 
-  (** The above weak equivalence specialized to the case of [standard_limit]s *)
-  Definition standard_limit_up_weq {X} : (X → standard_limit d) ≃ cone d X :=
-    weqpair (into_cone_to_cone (type_cone d)) (limit_universal X).
+  (** The universal property as a weak equivalence *)
+  Definition standard_limit_homot_up_weq {X} :
+    (X → standard_limit d) ≃ homot_cone d X :=
+    @limit_homot_up_weq _ _ _ limit_homot_universal.
 
+  (** The universal property in terms of normal cones *)
+  Definition standard_limit_up_weq {X} : (X → standard_limit d) ≃ cone d X :=
+    weqcomp standard_limit_homot_up_weq (homot_cone_weq_cone _ _).
 End StandardLimitUP.
