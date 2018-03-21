@@ -140,7 +140,6 @@ Proof.
   apply combine_over_nat.
 Defined.
 
-(** If the base type is contractible, so is the type of sections over it. *)
 Definition weqsecovercontr_uncurried {X : UU} {Y : X -> UU}
            (P : ∏ x : X, Y x -> UU) (isc : iscontr (∑ x : X, Y x)) :
   (∏ (x : X) (y : Y x), P x y) ≃ (P (pr1 (iscontrpr1 isc)) (pr2 (iscontrpr1 isc))).
