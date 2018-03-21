@@ -140,6 +140,17 @@ Proof.
   apply combine_over_nat.
 Defined.
 
+(** If the base type is contractible, so is the type of sections over it. *)
+Definition weqsecovercontr_uncurried {X : UU} {Y : X -> UU}
+           (P : ∏ x : X, Y x -> UU) (isc : iscontr (∑ x : X, Y x)) :
+  (∏ (x : X) (y : Y x), P x y) ≃ (P (pr1 (iscontrpr1 isc)) (pr2 (iscontrpr1 isc))).
+Proof.
+  ≃ (∏ pair : (∑ x : X, Y x), uncurry (Z := λ _, UU) P pair) by
+    apply invweq, weqsecovertotal2.
+  ≃' (uncurry (Z := λ _, UU) P (iscontrpr1 isc)) by (apply idweq).
+  apply weqsecovercontr.
+Defined.
+
 (** Shifted cochains have equivalent limits.
     (Lemma 12 in Ahrens, Capriotti, and Spadotti) *)
 
@@ -240,32 +251,21 @@ Proof.
              (dmor cocha (idpath (S v))
                ∘ _ (idfun (dob cocha (S v)))) (xs (S u)) = xs v)
            (λ v, ∏ (u : nat) (e : S v = u), dmor cocha e (xs u) = xs v)).
+
   (** We use the following fact over and over to simplify the remaining types:
       for any x : X, the type ∑ y : X, x = y is contractible. *)
-  - ≃' ((∏ (pair : ∑ u : nat, 1 = u), dmor cocha (pr2 pair) (xs (pr1 pair)) = xs 0)).
-    + apply invweq, weqsecovertotal2.
-    + unfold π.
-      apply (@weqsecovercontr (∑ u : nat, 1 = u)
-                              (λ _, _ = xs 0)
-                              (iscontr_paths_from 1)).
+  - apply invweq.
+    apply (@weqsecovercontr_uncurried
+             nat (λ n, 1 = n) (λ _ _, _ = xs 0) (iscontr_paths_from 1)).
   - intros u.
-    ≃ (∏ pair : (∑ v : nat, S u = v),
-      (dmor cocha (idpath (S (S u)))
-        ∘ transportf (λ o : nat, dob cocha (S o) → dob cocha (S (S u))) (pr2 pair)
-        (idfun (dob cocha (S (S u))))) (xs (S (pr1 pair))) = xs (S u)) by
-     (apply invweq, weqsecovertotal2).
     ≃ ((dmor cocha (idpath (S (S u)))
             ∘ transportf (λ o : nat, dob cocha (S o) → dob cocha (S (S u)))
                 (idpath (S u)) (idfun (dob cocha (S (S u))))) (xs (S (S u))) =
           xs (S u)).
-    + apply (@weqsecovercontr (∑ x : nat, (S u) = x)
-                              (λ _, _ _ = xs (S u))
-                              (iscontr_paths_from (S u))).
+    + apply (@weqsecovercontr_uncurried
+               nat (λ n, (S u) = n) (λ _ _, _ _ = xs (S u)) (iscontr_paths_from _)).
     + cbn; unfold funcomp, idfun.
-      ≃' (∏ pair : (∑ v : nat, S (S u) = v), dmor cocha (pr2 pair) (xs (pr1 pair)) =
-                                             xs (S u)) by (apply weqsecovertotal2).
       apply invweq.
-      apply (@weqsecovercontr (∑ x : nat, (S (S u)) = x)
-                              (λ pair, _ = xs (S u))
-                              (iscontr_paths_from (S (S u)))).
+      apply (@weqsecovercontr_uncurried
+               nat (λ n, (S (S u)) = n) (λ _ _, _ = xs (S u)) (iscontr_paths_from _)).
 Defined.
