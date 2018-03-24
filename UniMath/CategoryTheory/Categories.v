@@ -213,6 +213,15 @@ Arguments id_left [C a b] f.
 Arguments id_right [C a b] f.
 Arguments assoc [C a b c d] f g h.
 
+(** For use with `auto with cat` and `autorewrite with cat`. *)
+Hint Resolve id_left : cat.
+Hint Resolve id_right : cat.
+Hint Resolve assoc : cat.
+Hint Rewrite id_left : cat.
+Hint Rewrite id_right : cat.
+Hint Rewrite -> assoc : cat.
+Hint Rewrite <- assoc : cat.
+
 Lemma assoc4 (C : precategory) (a b c d e : C) (f : a --> b) (g : b --> c)
        (h : c --> d) (i : d --> e) :
      ((f · g) · h) · i = f · (g · h) · i.
