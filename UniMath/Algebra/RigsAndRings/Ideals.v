@@ -35,6 +35,16 @@ Section Definitions.
 
   Definition mk_lideal :
     ∏ (S : subabmonoid (rigaddabmonoid R)), is_lideal S → lideal := tpair _.
+  Definition lideal_to_subabmonoid (I : lideal) : subabmonoid (rigaddabmonoid R) := pr1 I.
+  Coercion lideal_to_subabmonoid : lideal >-> subabmonoid.
+
+  Definition lideal_mult (LI : lideal) (x : R) (y : LI) : LI.
+  Proof.
+    use tpair.
+    - exact (x * pr1carrier LI y).
+    - apply (pr2 LI x).
+      exact (pr2 y).
+  Defined.
 
   (** *** Right ideals ([rideal]) *)
 
@@ -50,6 +60,16 @@ Section Definitions.
 
   Definition mk_rideal :
     ∏ (S : subabmonoid (rigaddabmonoid R)), is_rideal S → rideal := tpair _.
+  Definition rideal_to_subabmonoid (I : rideal) : subabmonoid (rigaddabmonoid R) := pr1 I.
+  Coercion rideal_to_subabmonoid : rideal >-> subabmonoid.
+
+  Definition rideal_mult (RI : rideal) (y : RI) (x : R) : RI.
+  Proof.
+    use tpair.
+    - exact (pr1carrier RI y * x).
+    - apply (pr2 RI x).
+      exact (pr2 y).
+  Defined.
 
   (** *** Two-sided ideals ([ideal]) *)
 
@@ -58,9 +78,60 @@ Section Definitions.
 
   Definition ideal : UU := ∑ S : subabmonoid (rigaddabmonoid R), is_ideal S.
 
+  Definition ideal_to_subabmonoid (I : ideal) : subabmonoid (rigaddabmonoid R) := pr1 I.
+  Coercion ideal_to_subabmonoid : ideal >-> subabmonoid.
+  Definition ideal_to_lideal (I : ideal) : lideal :=
+    mk_lideal I (dirprod_pr1 (pr2 I)).
+  Coercion ideal_to_lideal : ideal >-> lideal.
+  Definition ideal_to_rideal (I : ideal) : rideal :=
+    mk_rideal I (dirprod_pr2 (pr2 I)).
+  Coercion ideal_to_rideal : ideal >-> rideal.
+
   Definition mk_ideal (S : subabmonoid (rigaddabmonoid R))
              (isl : is_lideal S) (isr : is_rideal S) : ideal :=
     tpair _ S (dirprodpair isl isr).
+
+  Definition ideal_mult_l (I : ideal) (x : R) (y : I) : I.
+  Proof.
+    use tpair.
+    - exact (x * pr1carrier I y).
+    - apply (dirprod_pr1 (pr2 I) x).
+      exact (pr2 y).
+  Defined.
+
+  Definition ideal_mult_r (I : ideal) (y : I) (x : R) : I.
+  Proof.
+    use tpair.
+    - exact (pr1carrier I y * x).
+    - apply (dirprod_pr2 (pr2 I) x).
+      exact (pr2 y).
+  Defined.
+
+  (** Zero is in every ideal. *)
+  Lemma zero_in_ideal (I : ideal) : I.
+  Proof.
+    use tpair.
+    - exact 0.
+    - exact (pr2 (pr2 (ideal_to_subabmonoid I))).
+  Defined.
+
+  (** Elements of an ideal are not equal to 0 if and only if they are
+      in the original rig. *)
+  Lemma neq_zero_in_ideal (I : ideal) (x : I) :
+    (x != zero_in_ideal I) ≃ (pr1carrier I x != 0).
+  Proof.
+    apply weqimplimpl.
+    - intros neq eq.
+      apply neq.
+      apply subtypeEquality'.
+      + assumption.
+      + apply propproperty.
+    - intros neq eq.
+      apply neq.
+      exact (maponpaths pr1 eq).
+    - apply isapropneg.
+    - apply isapropneg.
+  Defined.
 End Definitions.
 
 Arguments lideal _ : clear implicits.
