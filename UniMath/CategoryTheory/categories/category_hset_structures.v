@@ -25,10 +25,13 @@ Contents:
 - Kernel pairs ([kernel_pair_HSET])
 - Effective epis ([EffectiveEpis_HSET])
 - Split epis with axiom of choice ([SplitEpis_HSET])
+- Points as global elements
+- Monics are injective
+- Subobject classifier ([subobject_classifier_HSET])
 
-Written by: Benedikt Ahrens, Anders Mörtberg
+Written by: Benedikt Ahrens, Anders Mörtberg, Langston Barrett
 
-October 2015 - January 2016
+October 2015 - November 2018
 
 ************************************************************)
 
@@ -60,6 +63,8 @@ Require Import UniMath.CategoryTheory.slicecat.
 Require Import UniMath.CategoryTheory.Epis.
 Require Import UniMath.CategoryTheory.EpiFacts.
 Require Import UniMath.CategoryTheory.NNO.
+Require Import UniMath.CategoryTheory.Monics.
+Require Import UniMath.CategoryTheory.SubobjectClassifier.
 
 Local Open Scope cat.
 
@@ -1088,3 +1093,189 @@ Proof.
   apply funextfun.
   exact (pr2 h).
 Qed.
+
+(** ** Points as global elements *)
+
+Definition global_element_HSET {A : hSet} (a : A) : HSET⟦unitset, A⟧ := fun _ => a.
+(** TODO: I think there is a name in UniMath for the constant function at [a],
+    what is it? *)
+
+Definition global_element_HSET_paths_weq {A : hSet} (x y : A) :
+  (x = y) ≃ (global_element_HSET x = global_element_HSET y).
+Proof.
+  apply weqimplimpl.
+  - intro.
+    apply funextfun; intro; cbn.
+    assumption.
+  - intros eq.
+    apply eqtohomot in eq.
+    specialize (eq tt); cbn in eq.
+    assumption.
+  - apply setproperty.
+  - apply setproperty.
+Qed.
+
+Definition global_element_HSET_comp {A B : hSet} (f : HSET⟦A, B⟧) (x : A) :
+  global_element_HSET x · f = global_element_HSET (f x).
+Proof.
+  reflexivity.
+Qed.
+
+(** This goes through without any further reasoning because of the computational
+    behavior of [global_element_HSET] (i.e. [global_element_HSET_comp]). *)
+Definition global_element_HSET_fun_weq {A B : hSet} (f : HSET⟦A, B⟧) (x y : A) :
+  (f x = f y) ≃ (global_element_HSET x · f = global_element_HSET y · f).
+Proof.
+  apply global_element_HSET_paths_weq.
+Qed.
+
+(** ** Monics are injective *)
+
+Lemma monic_isInjective_HSET {A B : hSet} (f : HSET⟦A, B⟧) (isM : isMonic f) :
+  isInjective f.
+Proof.
+  apply incl_injectivity; intros b.
+  apply invproofirrelevance; intros a1 a2.
+  unfold hfiber in *.
+  apply subtypeEquality; [intro; apply setproperty|].
+  unfold isMonic in *.
+  specialize (isM _ (global_element_HSET (pr1 a1)) (global_element_HSET (pr1 a2))).
+  apply global_element_HSET_paths_weq.
+  apply isM.
+  eapply pathscomp0.
+  - refine (global_element_HSET_comp _ _ @ _).
+    apply global_element_HSET_paths_weq.
+    exact (pr2 a1).
+  - refine (_ @ !global_element_HSET_comp _ _).
+    apply global_element_HSET_paths_weq.
+    exact (!pr2 a2).
+Qed.
+
+Corollary isaprop_hfiber_monic {A B : hSet} (f : HSET⟦A, B⟧) (isM : isMonic f) :
+  isPredicate (hfiber f).
+Proof.
+  intro.
+  apply incl_injectivity.
+  apply monic_isInjective_HSET.
+  assumption.
+Qed.
+
+Definition hProp_set : hSet := (_,, isasethProp).
+
+Require Import UniMath.Foundations.All.
+Require Import UniMath.MoreFoundations.All.
+
+Definition subobject_classifier_HSET : subobject_classifier TerminalHSET.
+Proof.
+  unfold subobject_classifier.
+  exists hProp_set.
+  exists (global_element_HSET ((unit,, isapropunit) : hProp_set)).
+  intros ? ? m.
+
+  use iscontrpair.
+
+  - (** The image of m *)
+    exists (fun z => (hfiber (pr1 m) z,, isaprop_hfiber_monic (pr1 m) (pr2 m) z)).
+    use tpair.
+    + (** Existence of the commutative square
+          <<
+            X -------> TerminalHSET
+            V              V
+          m |              | true
+            V     ∃!       V
+            Y - - - - -> hProp
+          >>
+       *)
+      apply funextfun; intro.
+      apply weqtopathshProp, weqimplimpl.
+      * intro; exact tt.
+      * intro; cbn.
+        use tpair.
+        -- assumption.
+        -- reflexivity.
+      * apply propproperty.
+      * apply propproperty.
+    + (** The aforementioned square is a pullback *)
+      cbn beta.
+      unfold isPullback; cbn.
+      intros Z f g H.
+      use iscontrpair.
+      * use tpair.
+        -- (** The hypothesis H states that that each [f x] is in the image of [m],
+               and since [m] is monic (injective), this assignment extends to a map
+               [Z -> X] defined by [z ↦ m^-1 (f z)]. *)
+           intro z.
+           eapply hfiberpr1.
+           eapply eqweqmap.
+           ++ apply pathsinv0.
+              apply (maponpaths pr1 (toforallpaths _ _ _ H z)).
+           ++ exact tt.
+        -- split.
+           ++ (** The first triangle commutes by definition of the above map:
+                  [m] sends the preimage [m^-1 (f z)] to [f z]. *)
+              apply funextfun; intro z; cbn.
+              apply hfiberpr2.
+           ++ (** All maps to the terminal object are equal *)
+              apply proofirrelevance, impred.
+              intro; apply isapropunit.
+      * intro.
+        apply subtypeEquality.
+        -- intro.
+           apply isapropdirprod.
+           ++ apply (setproperty (hset_fun_space _ _)).
+           ++ apply (setproperty (hset_fun_space _ unitset)).
+        -- cbn.
+           apply funextsec; intro; cbn.
+           (** Precompose with [m] and use the commutative square *)
+           apply (invweq (weqpair _ (monic_isInjective_HSET (pr1 m) (pr2 m) _ _))).
+           eapply pathscomp0.
+           ++ apply (toforallpaths _ _ _ (pr1 (pr2 t))).
+           ++ apply pathsinv0.
+              apply hfiberpr2.
+  - intro O'.
+    apply subtypeEquality.
+    + intro.
+      apply Propositions.isaproptotal2.
+      * intro; apply isaprop_isPullback.
+      * intros; apply proofirrelevance.
+        apply setproperty.
+    + cbn.
+      apply funextfun; intro.
+      apply weqtopathshProp, weqimplimpl.
+      * (** [O'] and [∥hfiber ...∥] are both subtypes of Y.
+            Why must they contain the same elements?
+            The equality (pr1 (pr2 O')) tells us they must agree on
+            things in the image of m. *)
+        intro y; unfold hProptoType; cbn.
+  H : (λ x : Z, hfiber (pr1 m) (f x),, isaprop_hfiber_monic (pr1 m) (pr2 m) (f x)) =
+      (λ x : Z, global_element_HSET (unit,, isapropunit) (g x))
+        assert (m · pr1 O' = m · (fun z => (hfiber (pr1 m) z,, isaprop_hfiber_monic (pr1 m) (pr2 m) z : pr1hSet hProp_set))).
+        {
+          refine (pr1 (pr2 O') @ _).
+          admit. (** Proven in first part *)
+        }
+        pose (xx := toforallpaths _ _ _ (pr1 (pr2 O'))).
+        pose (xxx := toforallpaths _ _ _ X0).
+        cbn in xx.
+        cbn in xxx.
+        Check pr1 (pr2 ).
+        Check PullbackArrowUnique _ _ _ _ _ (pr2 (pr2 O')) .
+        Check PullbackArrowUnique (pr1 O' : HSET ⟦Y, hProp_set⟧)
+              _ m _
+              (pr1 (pr2 O')) (pr2 (pr2 O'))
+              _ _ _ (X0 @ HH).
+
+        intro.
+        cbn in O'.
+        Check (eqtohomot (pr1 (pr2 O'))).
+        Check PullbackArrowUnique (pr1 O' : HSET ⟦Y, hProp_set⟧)
+              (global_element_HSET _) m (λ _ : _, tt)
+              (pr1 (pr2 O')) (pr2 (pr2 O'))
+              _ _ _ HH.
+        SearchAbout isPullback.
+      apply
+      Check (MonicisMonic _ m _ ).
+      Print isMonic HSET.
+      SearchAbout Monic.
+
+      SearchAbout isaprop total2.

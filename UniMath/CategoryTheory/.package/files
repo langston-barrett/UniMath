@@ -101,6 +101,7 @@ AdditiveFunctors.v
 LocalizingClass.v
 UnderCategories.v
 Subobjects.v
+SubobjectClassifier.v
 Quotobjects.v
 GrothendieckTopos.v
 AbelianPushoutPullback.v
