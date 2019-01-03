@@ -39,6 +39,7 @@ Unset Kernel Term Sharing.
 (** Imports *)
 
 Require Export UniMath.Algebra.BinaryOperations.
+Require Export UniMath.Algebra.Semigroups.
 Require Import UniMath.MoreFoundations.All.
 
 
@@ -50,26 +51,45 @@ Require Import UniMath.MoreFoundations.All.
 
 (** ****  Basic definitions *)
 
-Definition monoid : UU := total2 (λ X : setwithbinop, ismonoidop (@op X)).
+Definition monoid : UU :=
+  ∑ X : semigroup, isunital (@op X).
 
-Definition monoidpair :
-  ∏ (t : setwithbinop), (λ X : setwithbinop, ismonoidop op) t → ∑ X : setwithbinop, ismonoidop op :=
-  tpair (λ X : setwithbinop, ismonoidop (@op X)).
+Definition monoidpair (X : setwithbinop) :
+  ismonoidop (@op X) -> monoid.
+Proof.
+  intro H.
+  use tpair.
+  - use make_semigroup.
+    + assumption.
+    + abstract exact (pr1 H).
+  - abstract exact (pr2 H).
+Defined.
 
-Definition pr1monoid : monoid -> setwithbinop := @pr1 _ _.
-Coercion pr1monoid : monoid >-> setwithbinop.
+Definition monoidpair' (X : setwithbinop) :
+  isunital (@op X) → isassoc (@op X) -> monoid.
+Proof.
+  intros ? ?.
+  use tpair.
+  - use make_semigroup.
+    + assumption.
+    + abstract assumption.
+  - abstract assumption.
+Defined.
 
-Definition assocax (X : monoid) : isassoc (@op X) := pr1 (pr2 X).
+Definition pr1monoid : monoid -> semigroup := @pr1 _ _.
+Coercion pr1monoid : monoid >-> semigroup.
 
-Definition unel (X : monoid) : X := pr1 (pr2 (pr2 X)).
+Definition assocax (X : monoid) : isassoc (@op X) := pr2 (pr1monoid X).
 
-Definition lunax (X : monoid) : islunit (@op X) (unel X) := pr1 (pr2 (pr2 (pr2 X))).
+Definition unel (X : monoid) : X := pr1 (pr2 X).
 
-Definition runax (X : monoid) : isrunit (@op X) (unel X) := pr2 (pr2 (pr2 (pr2 X))).
+Definition lunax (X : monoid) : islunit (@op X) (unel X) := pr1 (pr2 (pr2 X)).
+
+Definition runax (X : monoid) : isrunit (@op X) (unel X) := pr2 (pr2 (pr2 X)).
 
 Definition unax (X : monoid) : isunit (@op X) (unel X) := dirprodpair (lunax X) (runax X).
 
-Definition isasetmonoid (X : monoid) : isaset X := pr2 (pr1 (pr1 X)).
+Definition isasetmonoid (X : monoid) : isaset X := pr2 (pr1 (pr1 (pr1monoid X))).
 
 Delimit Scope addmonoid_scope with addmonoid.
 Delimit Scope multmonoid_scope with multmonoid.
@@ -292,8 +312,8 @@ Qed.
                                    ≃ (monoidiso' X Y)
                                    ≃ (monoidiso X Y).
 
-   The reason why we use monoidiso' is that then we can use univalence for sets with binops,
-   [setwithbinop_univalence]. See [monoid_univalence_weq2].
+   The reason why we use [monoidiso'] is that then we can use univalence for
+   semigroups [semigroup_univalence].
  *)
 
 Local Definition monoidiso' (X Y : monoid) : UU :=

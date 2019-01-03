@@ -1,4 +1,5 @@
 BinaryOperations.v
+Semigroups.v
 Monoids.v
 Groups.v
 RigsAndRings.v
