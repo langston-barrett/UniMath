@@ -60,41 +60,79 @@ Defined.
 
 (** *** Univalence *)
 
+(** **** General lemma *)
+
+(** If [T] is some class of algebraic structures which are known to be "univalent"
+    in the sense that there is a family [iso : T -> T -> UU] such that for all
+    [A B : T], [A = B ≃ iso A B], and [P] is a proposition that holds of certain
+    [A : T], (and which is preserved under all [T]-maps), then the class of [∑ T, P]
+    structures is "univalent".
+ *)
+
+(** Examples:
+    - Univalence for semigroups (below) is given by taking [T] the class of sets
+      with binary opertions and [P] the proposition "is associative".
+    - Univalence for monoids is given by taking [T] the class of semigroups
+      and [P] the proposition "is unital".
+    - Univalence for commutative monoids is given by taking [T] the class of
+      monoids and [P] the proposition "is commutative".
+ *)
+
+Section UnivalencePropLemma.
+  Context {T : UU} {iso : T -> T -> UU}.
+  Context (univalentT : ∏ A B : T, (A = B) ≃ (iso A B)).
+
+  Lemma univalence_of_prop_structures
+        (prop : T -> UU) (isaprop_prop : ∏ t, isaprop (prop t)) :
+    ∏ A B : total2 prop, (A = B) ≃ (iso (pr1 A) (pr1 B)).
+  Proof.
+    intros A B.
+    apply (@weqcomp _ (pr1 A = pr1 B)).
+    - apply PartA.path_sigma_hprop.
+      apply isaprop_prop.
+    - apply univalentT.
+  Defined.
+
+End UnivalencePropLemma.
+
+(** **** Univalence for semigroups *)
+
 (** [(X = Y) ≃ (binopiso X Y)]
 
    This is very similar to the case for sets with binary operations
    ([setwithbinop_univalence]).
  *)
 
-Definition semigroup_univalence (X Y : semigroup) : (X = Y) ≃ (binopiso X Y).
+(** A proof with the "wrong" map *)
+Definition semigroup_univalence' (X Y : semigroup) : (X = Y) ≃ (binopiso X Y).
 Proof.
-  apply (@weqcomp _ (pr1 X = pr1 Y)).
-  - apply PartA.path_sigma_hprop, isapropisassoc.
-  - exact (setwithbinop_univalence X Y).
-Qed.
-
-Definition semigroup_univalence_map (X Y : semigroup) : X = Y -> semigroupiso X Y.
-Proof.
-  intro e. induction e. exact (idsemigroupiso X).
+  apply (univalence_of_prop_structures setwithbinop_univalence
+                                       (fun X => isassoc op)).
+  intro; apply isapropisassoc.
 Defined.
 
+(** The "right" map *)
+Definition semigroup_univalence_map (X Y : semigroup) : X = Y -> binopiso X Y.
+Proof.
+  intro e; induction e; exact (idbinopiso _).
+Defined.
+
+(** The "right" map is a weak equivalence because it is homotopic to the
+    "wrong" one. *)
 Lemma semigroup_univalence_isweq (X Y : semigroup) :
   isweq (semigroup_univalence_map X Y).
 Proof.
   use isweqhomot.
-  - exact (weqcomp (semigroup_univalence_weq1 X Y)
-                   (weqcomp (semigroup_univalence_weq2 X Y) (semigroup_univalence_weq3 X Y))).
-  - intros e. induction e.
-    use (pathscomp0 weqcomp_to_funcomp_app).
-    use weqcomp_to_funcomp_app.
+  - apply semigroup_univalence'.
+  - intros e; induction e; reflexivity.
   - use weqproperty.
-Defined.
+Qed.
 Opaque semigroup_univalence_isweq.
 
-Definition semigroup_univalence (X Y : semigroup) : (X = Y) ≃ (semigroupiso X Y).
+Definition semigroup_univalence (X Y : semigroup) : (X = Y) ≃ (binopiso X Y).
 Proof.
   use weqpair.
   - exact (semigroup_univalence_map X Y).
   - exact (semigroup_univalence_isweq X Y).
-Defined.
+Qed.
 Opaque semigroup_univalence.
