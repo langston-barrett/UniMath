@@ -6,6 +6,7 @@
   - Basic definitions
   - Trivial (unit) semigroup
   - Homomorphisms
+  - Subobjects
   - Univalence
 *)
 
@@ -27,6 +28,8 @@ Definition setwithbinop_from_semigroup : semigroup -> setwithbinop := @pr1 _ _.
 Coercion setwithbinop_from_semigroup : semigroup >-> setwithbinop.
 
 Definition isasetsemigroup (X : semigroup) : isaset X := pr2 (pr1 (pr1 X)).
+
+Definition assocax (X : semigroup) : isassoc (@op X) := pr2 X.
 
 Delimit Scope semigroup_scope with semigroup.
 Delimit Scope addsemigroup_scope with addsemigroup.
@@ -58,6 +61,10 @@ Defined.
 (** These are just [binopfun], so there's not much to say here.
     Look in BinaryOperations.v. *)
 
+(** **** Subobjects *)
+
+(** Similarly, these are just [issubsetwithbinop]. *)
+
 (** *** Univalence *)
 
 (** **** General lemma *)
@@ -72,8 +79,6 @@ Defined.
 (** Examples:
     - Univalence for semigroups (below) is given by taking [T] the class of sets
       with binary opertions and [P] the proposition "is associative".
-    - Univalence for monoids is given by taking [T] the class of semigroups
-      and [P] the proposition "is unital".
     - Univalence for commutative monoids is given by taking [T] the class of
       monoids and [P] the proposition "is commutative".
  *)
@@ -134,5 +139,4 @@ Proof.
   use weqpair.
   - exact (semigroup_univalence_map X Y).
   - exact (semigroup_univalence_isweq X Y).
-Qed.
-Opaque semigroup_univalence.
+Defined.

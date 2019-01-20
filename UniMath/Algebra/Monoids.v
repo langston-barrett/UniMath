@@ -62,7 +62,7 @@ Proof.
   - use make_semigroup.
     + assumption.
     + abstract exact (pr1 H).
-  - abstract exact (pr2 H).
+  - exact (pr2 H).
 Defined.
 
 Definition monoidpair' (X : setwithbinop) :
@@ -73,13 +73,20 @@ Proof.
   - use make_semigroup.
     + assumption.
     + abstract assumption.
-  - abstract assumption.
+  - assumption.
+Defined.
+
+Definition monoid_from_semigroup (X : semigroup) :
+  isunital (@op X) →  monoid.
+Proof.
+  intros ?.
+  use tpair.
+  - assumption.
+  - assumption.
 Defined.
 
 Definition pr1monoid : monoid -> semigroup := @pr1 _ _.
 Coercion pr1monoid : monoid >-> semigroup.
-
-Definition assocax (X : monoid) : isassoc (@op X) := pr2 (pr1monoid X).
 
 Definition unel (X : monoid) : X := pr1 (pr2 X).
 
@@ -89,7 +96,10 @@ Definition runax (X : monoid) : isrunit (@op X) (unel X) := pr2 (pr2 (pr2 X)).
 
 Definition unax (X : monoid) : isunit (@op X) (unel X) := dirprodpair (lunax X) (runax X).
 
+Definition monoid_isunital (X : monoid) : isunital (@op X) := pr2 X.
+
 Definition isasetmonoid (X : monoid) : isaset X := pr2 (pr1 (pr1 (pr1monoid X))).
+
 
 Delimit Scope addmonoid_scope with addmonoid.
 Delimit Scope multmonoid_scope with multmonoid.
@@ -101,6 +111,13 @@ Module AddNotation.
   Notation "x + y" := (op x y) : addmonoid_scope.
   Notation "0" := (unel _) : addmonoid_scope.
 End AddNotation.
+
+Lemma monoidop_ismonoidop (X : monoid) : ismonoidop (@op X).
+Proof.
+  use mk_ismonoidop.
+  - apply assocax.
+  - apply monoid_isunital.
+Defined.
 
 (* To get additive notation in a file that uses this one, insert the following command:
    Import UniMath.Algebra.Monoids.AddNotation.
@@ -316,8 +333,12 @@ Qed.
    semigroups [semigroup_univalence].
  *)
 
+(* Lemma binopiso_ismonoidfun (X Y : monoid) (f : binopiso X Y) : ismonoidfun f. *)
+(* Proof. *)
+
+
 Local Definition monoidiso' (X Y : monoid) : UU :=
-  ∑ g : (∑ f : X ≃ Y, isbinopfun f), (pr1 g) (unel X) = unel Y.
+  ∑ g : binopiso X Y, g (unel X) = unel Y.
 
 Definition monoid_univalence_weq1 (X Y : monoid) : (X = Y) ≃ (X ╝ Y) :=
   total2_paths_equiv _ X Y.
@@ -325,13 +346,15 @@ Definition monoid_univalence_weq1 (X Y : monoid) : (X = Y) ≃ (X ╝ Y) :=
 Definition monoid_univalence_weq2 (X Y : monoid) : (X ╝ Y) ≃ (monoidiso' X Y).
 Proof.
   use weqbandf.
-  - exact (setwithbinop_univalence X Y).
+  - apply semigroup_univalence.
   - intros e. cbn. use invweq. induction X as [X Xop]. induction Y as [Y Yop]. cbn in e.
     cbn. induction e. use weqimplimpl.
-    + intros i. use proofirrelevance. use isapropismonoidop.
-    + intros i. induction i. use idpath.
+    + intro; apply proofirrelevance, isapropisunital.
+    + intros i; induction i; use idpath.
     + use setproperty.
-    + use isapropifcontr. exact (@isapropismonoidop X (pr2 X) Xop Yop).
+    + intros ? ?.
+      use isapropifcontr.
+      apply isapropisunital.
 Defined.
 Opaque monoid_univalence_weq2.
 
@@ -341,7 +364,7 @@ Definition monoid_univalence_weq3 (X Y : monoid) : (monoidiso' X Y) ≃ (monoidi
 
 Definition monoid_univalence_map (X Y : monoid) : X = Y -> monoidiso X Y.
 Proof.
-  intro e. induction e. exact (idmonoidiso X).
+  intro e; induction e; exact (idmonoidiso X).
 Defined.
 
 Lemma monoid_univalence_isweq (X Y : monoid) :
@@ -365,6 +388,24 @@ Proof.
 Defined.
 Opaque monoid_univalence.
 
+(** A corollary is that [monoidiso X Y ≃ binopiso X Y] *)
+
+Definition monoid_binopiso_univalence (X Y : monoid) : (X = Y) ≃ (binopiso X Y).
+Proof.
+  apply (univalence_of_prop_structures semigroup_univalence
+                                       (fun X => isunital op)).
+  intro; apply isapropisunital.
+Defined.
+Opaque monoid_binopiso_univalence.
+
+Definition monoidiso_weq_binopiso (X Y : monoid) :
+  (monoidiso X Y) ≃ (binopiso X Y).
+Proof.
+  eapply weqcomp.
+  - apply invweq, monoid_univalence.
+  - apply monoid_binopiso_univalence.
+Defined.
+Opaque monoidiso_weq_binopiso.
 
 (** **** Subobjects *)
 
@@ -415,21 +456,39 @@ Definition submonoidtosubsetswithbinop (X : monoid) : submonoid X -> @subsetswit
   λ A : _, subsetswithbinoppair (pr1 A) (pr1 (pr2 A)).
 Coercion submonoidtosubsetswithbinop : submonoid >-> subsetswithbinop.
 
+Lemma isassoccarrier {X : monoid} (A : submonoid X) : isassoc (@op A).
+Proof.
+  intros ? ? ?.
+  use subtypeEquality'.
+  - apply assocax.
+  - apply propproperty.
+Defined.
+
+Lemma isunitalcarrier {X : monoid} (A : submonoid X) : isunital (@op A).
+Proof.
+  use isunitalpair.
+  - use carrierpair.
+    + exact (unel X).
+    + exact (pr2 (pr2 A)).
+  - split; intro; (apply subtypeEquality'; [|apply propproperty]).
+    + apply lunax.
+    + apply runax.
+Defined.
+
 Lemma ismonoidcarrier {X : monoid} (A : submonoid X) : ismonoidop (@op A).
 Proof.
-  split.
-  - intros a a' a''. apply (invmaponpathsincl _ (isinclpr1carrier A)).
-    simpl. apply (assocax X).
-  - split with (carrierpair _ (unel X) (pr2 (pr2 A))).
-    split.
-    + simpl. intro a. apply (invmaponpathsincl _ (isinclpr1carrier A)).
-      simpl. apply (lunax X).
-    + intro a. apply (invmaponpathsincl _ (isinclpr1carrier A)).
-      simpl. apply (runax X).
+  use mk_ismonoidop.
+  - apply isassoccarrier.
+  - apply isunitalcarrier.
 Defined.
 
 Definition carrierofsubmonoid {X : monoid} (A : submonoid X) : monoid.
-Proof. split with A. apply ismonoidcarrier. Defined.
+Proof.
+  use monoid_from_semigroup.
+  - apply (make_semigroup A).
+    apply isassoccarrier.
+  - apply isunitalcarrier.
+Defined.
 Coercion carrierofsubmonoid : submonoid >-> monoid.
 
 Lemma intersection_submonoid :
@@ -451,7 +510,7 @@ Qed.
 Lemma ismonoidfun_pr1 {X : monoid} (A : submonoid X) : @ismonoidfun A X pr1.
 Proof.
   use mk_ismonoidfun.
-  - intros a a'. reflexivity.
+  - intros ? ?; reflexivity.
   - reflexivity.
 Defined.
 
@@ -505,10 +564,10 @@ Defined.
 Opaque isassocquot.
 
 Lemma isunitquot {X : monoid} (R : binopeqrel X) :
-  isunit (@op (setwithbinopquot R)) (setquotpr R (pr1 (pr2 (pr2 X)))).
+  isunit (@op (setwithbinopquot R)) (setquotpr R (unel X)).
 Proof.
   intros.
-  set (qun := setquotpr R (pr1 (pr2 (pr2 X)))).
+  set (qun := setquotpr R (unel X)).
   set (qsetwithop := setwithbinopquot R).
   split.
   - intro x.
@@ -522,10 +581,14 @@ Defined.
 Opaque isunitquot.
 
 Definition ismonoidquot {X : monoid} (R : binopeqrel X) : ismonoidop (@op (setwithbinopquot R)) :=
-  tpair _ (isassocquot R) (tpair _ (setquotpr R (pr1 (pr2 (pr2 X)))) (isunitquot R)).
+  tpair _ (isassocquot R) (tpair _ (setquotpr R (unel X)) (isunitquot R)).
 
 Definition monoidquot {X : monoid} (R : binopeqrel X) : monoid.
-Proof. split with (setwithbinopquot R). apply ismonoidquot. Defined.
+Proof.
+  use monoidpair.
+  - exact (setwithbinopquot R).
+  - exact (ismonoidquot R).
+Defined.
 
 Lemma ismonoidfun_setquotpr {X : monoid} (R : binopeqrel X) : @ismonoidfun X (monoidquot R) (setquotpr R).
 Proof.
@@ -629,34 +692,51 @@ Definition ismonoiddirprod (X Y : monoid) : ismonoidop (@op (setwithbinopdirprod
 
 Definition monoiddirprod (X Y : monoid) : monoid.
 Proof.
-  split with (setwithbinopdirprod X Y).
-  apply ismonoiddirprod.
+  use monoidpair.
+  - exact (setwithbinopdirprod X Y).
+  - apply ismonoiddirprod.
 Defined.
-
 
 (** *** Abelian (commutative) monoids *)
 
 (** **** Basic definitions *)
 
-Definition abmonoid : UU := total2 (λ X : setwithbinop, isabmonoidop (@op X)).
+Definition abmonoid : UU := ∑ m : monoid, iscomm (@op m).
 
 Definition abmonoidpair :
-  ∏ (t : setwithbinop), (λ X : setwithbinop, isabmonoidop op) t →
-                        ∑ X : setwithbinop, isabmonoidop op :=
-  tpair (λ X : setwithbinop, isabmonoidop (@op X)).
+  ∏ (t : setwithbinop), (λ X : setwithbinop, isabmonoidop (@op t)) t → abmonoid.
+Proof.
+  intros ? H.
+  use tpair.
+  - use monoidpair.
+    + assumption.
+    + exact (dirprod_pr1 H).
+  - exact (dirprod_pr2 H).
+Defined.
 
-Definition abmonoidtomonoid : abmonoid -> monoid :=
-  λ X : _, monoidpair (pr1 X) (pr1 (pr2 X)).
+Definition abmonoidtomonoid (X : abmonoid) : monoid := pr1 X.
 Coercion abmonoidtomonoid : abmonoid >-> monoid.
 
-Definition commax (X : abmonoid) : iscomm (@op X) := pr2 (pr2 X).
+Definition commax (X : abmonoid) : iscomm (@op X) := pr2 X.
+
+Definition abmonoidop_isabmonoidop (X : abmonoid) :
+  isabmonoidop (@op X).
+Proof.
+  use mk_isabmonoidop.
+  - apply monoidop_ismonoidop.
+  - apply commax.
+Defined.
 
 Definition abmonoidrer (X : abmonoid) (a b c d : X) :
-  paths (op (op a b) (op c d)) (op (op a c) (op b d)) := abmonoidoprer (pr2 X) a b c d.
+  paths (op (op a b) (op c d)) (op (op a c) (op b d)) :=
+  abmonoidoprer (abmonoidop_isabmonoidop X) a b c d.
 
-Definition abmonoid_of_monoid (X : monoid) (H : iscomm (@op X)) : abmonoid :=
-  abmonoidpair X (mk_isabmonoidop (pr2 X) H).
-
+Definition abmonoid_of_monoid (X : monoid) (H : iscomm (@op X)) : abmonoid.
+Proof.
+  use tpair.
+  - assumption.
+  - abstract assumption.
+Defined.
 
 (** **** Construction of the trivial abmonoid consisting of one element given by unit. *)
 
@@ -664,15 +744,18 @@ Definition unitabmonoid_isabmonoid : isabmonoidop (@op unitmonoid).
 Proof.
   use mk_isabmonoidop.
   - exact unitmonoid_ismonoid.
-  - intros x x'. use isProofIrrelevantUnit.
-Qed.
+  - intros ? ?; use isProofIrrelevantUnit.
+Defined.
 
-Definition unitabmonoid : abmonoid := abmonoidpair unitmonoid unitabmonoid_isabmonoid.
+Definition unitabmonoid : abmonoid :=
+  abmonoidpair unitmonoid unitabmonoid_isabmonoid.
 
 Lemma abmonoidfuntounit_ismonoidfun (X : abmonoid) : ismonoidfun (λ x : X, (unel unitabmonoid)).
 Proof.
   use mk_ismonoidfun.
-  - use mk_isbinopfun. intros x x'. use isProofIrrelevantUnit.
+  - use mk_isbinopfun.
+    intros x x'.
+    use isProofIrrelevantUnit.
   - use isProofIrrelevantUnit.
 Qed.
 
@@ -782,53 +865,22 @@ Defined.
 
 
 (** **** (X = Y) ≃ (monoidiso X Y)
-    We use the following composition
 
-                      (X = Y) ≃ ((mk_abmonoid' X) = (mk_abmonoid' Y))
-                              ≃ ((pr1 (mk_abmonoid' X)) = (pr1 (mk_abmonoid' Y)))
-                              ≃ (monoidiso X Y)
-
-    where the third weak equivalence is given by univalence for monoids, [monoid_univalence].
+    Univalence for commutative monoids follows from a lemma in [Semigroups.v].
 *)
-
-Local Definition abmonoid' : UU := ∑ m : monoid, iscomm (@op m).
-
-Local Definition mk_abmonoid' (X : abmonoid) : abmonoid' :=
-  tpair _ (tpair _ (pr1 X) (dirprod_pr1 (pr2 X))) (dirprod_pr2 (pr2 X)).
-
-Definition abmonoid_univalence_weq1 : abmonoid ≃ abmonoid' :=
-  weqtotal2asstol (λ X : setwithbinop, ismonoidop (@op X))
-                  (fun y : (∑ X : setwithbinop, ismonoidop op) => iscomm (@op (pr1 y))).
-
-Definition abmonoid_univalence_weq1' (X Y : abmonoid) :
-  (X = Y) ≃ ((mk_abmonoid' X) = (mk_abmonoid' Y)) :=
-  weqpair _ (@isweqmaponpaths abmonoid abmonoid' abmonoid_univalence_weq1 X Y).
-
-Definition abmonoid_univalence_weq2 (X Y : abmonoid) :
-  ((mk_abmonoid' X) = (mk_abmonoid' Y)) ≃ ((pr1 (mk_abmonoid' X)) = (pr1 (mk_abmonoid' Y))).
-Proof.
-  use subtypeInjectivity.
-  intros w. use isapropiscomm.
-Defined.
-Opaque abmonoid_univalence_weq2.
-
-Definition abmonoid_univalence_weq3 (X Y : abmonoid) :
-  ((pr1 (mk_abmonoid' X)) = (pr1 (mk_abmonoid' Y))) ≃ (monoidiso X Y) :=
-  monoid_univalence (pr1 (mk_abmonoid' X)) (pr1 (mk_abmonoid' Y)).
 
 Definition abmonoid_univalence_map (X Y : abmonoid) : (X = Y) -> (monoidiso X Y).
 Proof.
-  intro e. induction e. exact (idmonoidiso X).
+  intro e; induction e; apply idmonoidiso.
 Defined.
 
 Lemma abmonoid_univalence_isweq (X Y : abmonoid) : isweq (abmonoid_univalence_map X Y).
 Proof.
   use isweqhomot.
-  - exact (weqcomp (abmonoid_univalence_weq1' X Y)
-                   (weqcomp (abmonoid_univalence_weq2 X Y) (abmonoid_univalence_weq3 X Y))).
-  - intros e. induction e.
-    use (pathscomp0 weqcomp_to_funcomp_app).
-    use weqcomp_to_funcomp_app.
+  - apply (univalence_of_prop_structures monoid_univalence
+                                         (fun X => iscomm op)).
+    intro; apply isapropiscomm.
+  - intros e; induction e; reflexivity.
   - use weqproperty.
 Defined.
 Opaque abmonoid_univalence_isweq.
@@ -849,9 +901,9 @@ Identity Coercion id_subabmonoid : subabmonoid >-> submonoid.
 
 Lemma iscommcarrier {X : abmonoid} (A : submonoid X) : iscomm (@op A).
 Proof.
-  intros a a'.
+  intros ? ?.
   apply (invmaponpathsincl _ (isinclpr1carrier A)).
-  simpl. apply (pr2 (pr2 X)).
+  apply commax.
 Defined.
 Opaque iscommcarrier.
 
@@ -869,7 +921,7 @@ submonoid_incl A.
 
 (** **** Quotient objects *)
 
-Lemma iscommquot {X : abmonoid} (R : binopeqrel X) : iscomm (@op (setwithbinopquot R)).
+Lemma iscommquot {X : abmonoid} (R : binopeqrel X) : iscomm (@op (monoidquot R)).
 Proof.
   intros.
   set (X0 := setwithbinopquot R).
@@ -884,8 +936,11 @@ Definition isabmonoidquot {X : abmonoid} (R : binopeqrel X) :
   isabmonoidop (@op (setwithbinopquot R)) := dirprodpair (ismonoidquot R) (iscommquot R).
 
 Definition abmonoidquot {X : abmonoid} (R : binopeqrel X) : abmonoid.
-Proof. split with (setwithbinopquot R). apply isabmonoidquot. Defined.
-
+Proof.
+  use abmonoid_of_monoid.
+  - exact (@monoidquot X R).
+  - apply iscommquot.
+Defined.
 
 (** **** Direct products *)
 
@@ -903,8 +958,10 @@ Definition isabmonoiddirprod (X Y : abmonoid) : isabmonoidop (@op (setwithbinopd
   dirprodpair (ismonoiddirprod X Y) (iscommdirprod X Y).
 
 Definition abmonoiddirprod (X Y : abmonoid) : abmonoid.
-Proof. split with (setwithbinopdirprod X Y). apply isabmonoiddirprod. Defined.
-
+Proof.
+  apply (abmonoid_of_monoid (monoiddirprod X Y)).
+  apply iscommdirprod.
+Defined.
 
 (** **** Monoid of fractions of an abelian monoid
 
@@ -973,7 +1030,7 @@ Lemma isbinophrelabmonoidfrac (X : abmonoid) (A : submonoid X) :
 Proof.
   intros.
   apply (isbinopreflrel (eqrelabmonoidfrac X A) (eqrelrefl (eqrelabmonoidfrac X A))).
-  set (rer := abmonoidoprer (pr2 X)). intros a b c d. simpl.
+  set (rer := abmonoidoprer (abmonoidop_isabmonoidop X)). intros a b c d. simpl.
   apply hinhfun2.
   destruct a as [ a a' ]. destruct a' as [ a' isa' ].
   destruct b as [ b b' ]. destruct b' as [ b' isb' ].
