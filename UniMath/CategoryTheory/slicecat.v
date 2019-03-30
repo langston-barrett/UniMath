@@ -986,3 +986,51 @@ Section Pullbacks.
           apply slicecat_mor_comm.
   Defined.
 End Pullbacks.
+
+(** ** Subobject classifier *)
+
+Section SubobjectClassifier.
+  Context {E : category} {I : ob E} {T : Terminal E} (BPE : BinProducts E).
+
+  Local Notation "E / X" := (slice_precat E X (homset_property E)).
+  Local Notation "% A" := (slicecat_ob_object E I A) (at level 20).
+  Local Notation "$ A" := (slicecat_ob_morphism E I A) (at level 20).
+  Local Notation "$$ f" := (slicecat_mor_morphism E I f) (at level 21).
+
+  Let T' := Terminal_slice_precat (homset_property E) I.
+
+  (** Diagram:
+    <<
+    >>
+    Construction is straight from Goldblatt, the proof is an exercise.
+  *)
+  Lemma subobject_classifier_to_slice (SOCE : subobject_classifier T) :
+    subobject_classifier T'.
+  Proof.
+    use tpair.
+    - (* [Ω × I] *)
+      exists (BinProductObject _ (BPE (subobject_classifier_object SOCE) I)).
+      apply BinProductPr2.
+    - cbn; use tpair.
+      + (** construction of [true := ⟨true!, id I⟩] *)
+        use tpair; cbn.
+        * (** morphism in [E] *)
+          apply BinProductArrow.
+          -- exact (const_true SOCE).
+          -- exact (identity I).
+        * apply pathsinv0, BinProductPr2Commutes.
+      + intros A B k.
+        (** We want the following to be a pullback:
+            <<
+              A --- k ---> B
+              |            |
+             $A          chi k
+              v            V
+              I -- true -> Ω × I
+            >>
+         *)
+        use iscontrpair; [use tpair; [use tpair|]|].
+        -- (** The characteristics map of k *)
+           apply BinProductArrow.
+           ++ apply (characteristic_morphism SOCE k).
+End SubobjectClassifier.
