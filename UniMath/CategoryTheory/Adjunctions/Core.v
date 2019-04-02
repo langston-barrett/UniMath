@@ -849,17 +849,51 @@ End RelativeAdjunction_by_natural_hom_weq.
 
 (** ** Lemmas about adjunctions *)
 
+
 Section AdjunctionLemmas.
   Context {C D : category} {F : functor C D} {G : functor D C}.
+
+  Local Notation "## G" := (@weq_from_fully_faithful _ _ G ltac:(auto) _ _) (at level 10).
+  Local Notation "##' G" := (invweq (@weq_from_fully_faithful _ _ G ltac:(auto) _ _)) (at level 10).
+
+  Lemma inv (ff : fully_faithful G) {a b c : ob D}
+    (f : a --> b) (g : b --> c) : ## G (f · g) = (## G f) · (## G g).
+  Proof.
+    apply functor_comp.
+  Qed.
+
   Context (are : are_adjoints F G).
 
   Let η : nat_trans (functor_identity C) (functor_composite F G) := unit_from_left_adjoint are.
   Let ε : nat_trans (functor_composite G F) (functor_identity D) := counit_from_left_adjoint are.
+  Local Notation "## G" := (@weq_from_fully_faithful _ _ G ltac:(auto) _ _) (at level 10).
+  Local Notation "##' G" := (invweq (@weq_from_fully_faithful _ _ G ltac:(auto) _ _)) (at level 10).
 
-  (** Rhiel, Lemma 4.5.13(iii) *)
-  Lemma right_adjoint_is_fully_faithful_iff_counit_is_iso :
-        fully_faithful G <-> is_nat_iso ε.
+  Require Import UniMath.Foundations.All.
+  Require Import UniMath.MoreFoundations.All.
+  (** Rhiel, Lemma 4.5.13(iii), -> *)
+  Lemma counit_is_iso_if_right_adjoint_is_fully_faithful :
+        fully_faithful G -> is_nat_iso ε.
   Proof.
-    split.
-    - intros ffG c.
-      pose (tri := triangle_id_right_ad are (F (G c))).
+    intros ffG d.
+    apply is_iso_from_is_z_iso.
+    use mk_is_z_isomorphism.
+    - (** [# G ^ -1 (η (G d)) : d -> F (G d) ] *)
+      apply (##' G).
+      exact (η (G d)).
+    - unfold is_inverse_in_precat; split.
+      2: {
+        cut (## G (((##' G) (η (G d))) · ε d) = ## G (identity d)). {
+          intro H.
+          apply (Injectivity (## G)).
+          intros; apply incl_injectivity, isinclweq, weqproperty.
+          assumption.
+        }
+        refine (_ @ !functor_id G d).
+        refine (inv ffG _ _ @ _).
+        change ((weq_from_fully_faithful ffG d (F (G d)))
+          ((invweq (weq_from_fully_faithful ffG d (F (G d)))) (η (G d))))
+               with ((## G ∘ ##' G)%weq (η (G d))).
+        refine (maponpaths (fun x => x · _) (eqtohomot (maponpaths pr1weq (weqcompinvl (weq_from_fully_faithful ffG _ _))) _) @ _).
+        apply triangle_id_right_ad.
+      }
