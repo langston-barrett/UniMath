@@ -16,6 +16,7 @@ Contents :
 - Construction of an adjunction from some partial data (Theorem 2 (iv) of Chapter IV.1 of
       MacLane)
 - Post-composition with a left adjoint is a left adjoint ([is_left_adjoint_post_composition_functor])
+- Lemmas about adjunctions
 
 ************************************************************)
 
@@ -845,3 +846,20 @@ Proof.
 Qed.
 
 End RelativeAdjunction_by_natural_hom_weq.
+
+(** ** Lemmas about adjunctions *)
+
+Section AdjunctionLemmas.
+  Context {C D : category} {F : functor C D} {G : functor D C}.
+  Context (are : are_adjoints F G).
+
+  Let η : nat_trans (functor_identity C) (functor_composite F G) := unit_from_left_adjoint are.
+  Let ε : nat_trans (functor_composite G F) (functor_identity D) := counit_from_left_adjoint are.
+
+  (** Rhiel, Lemma 4.5.13(iii) *)
+  Lemma right_adjoint_is_fully_faithful_iff_counit_is_iso :
+        fully_faithful G <-> is_nat_iso ε.
+  Proof.
+    split.
+    - intros ffG c.
+      pose (tri := triangle_id_right_ad are (F (G c))).
