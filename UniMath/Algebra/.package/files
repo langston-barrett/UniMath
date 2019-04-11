@@ -1,7 +1,9 @@
+Dcpo.v
 BinaryOperations.v
 Semigroups.v
 Monoids.v
 Groups.v
+GroupAction.v
 RigsAndRings.v
 RigsAndRings/Ideals.v
 Domains_and_Fields.v

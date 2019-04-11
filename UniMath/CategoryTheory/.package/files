@@ -1,4 +1,3 @@
-total2_paths.v
 Core/Categories.v
 Core/Isos.v
 Core/Univalence.v
@@ -16,7 +15,7 @@ Groupoids.v
 PrecategoryBinProduct.v
 ProductCategory.v
 whiskering.v
-Adjunctions.v
+Adjunctions/Core.v
 Monads/RelativeMonads.v
 Monads/RelMonads_Coreflection.v
 Monads/RelativeModules.v
@@ -71,7 +70,8 @@ NNO.v
 Subcategory/Limits.v
 EpiFacts.v
 exponentials.v
-categories/Types.v
+categories/Type/Core.v
+categories/Type/MonoEpiIso.v
 SimplicialSets.v
 yoneda.v
 Monads/Monads.v
@@ -82,7 +82,6 @@ FunctorCoalgebras.v
 precomp_fully_faithful.v
 precomp_ess_surj.v
 rezk_completion.v
-EquivalencesExamples.v
 EndofunctorsMonoidal.v
 CategoricalRecursionSchemes.v
 PointedFunctors.v
@@ -120,6 +119,8 @@ Monads/KTriples.v
 Monads/KTriplesEquiv.v
 Monads/Derivative.v
 Monads/MonadAlgebras.v
+Adjunctions/Restriction.v
+Adjunctions/Examples.v
 
 categories/setwith2binops.v
 categories/monoids.v
@@ -136,6 +137,10 @@ categories/modules.v
 categories/StandardCategories.v
 categories/Cats.v
 categories/preorder_categories.v
+categories/Type/Colimits.v
+categories/Type/Limits.v
+categories/Type/Structures.v
+categories/Type/Univalence.v
 
 categories/HSET/Limits.v
 categories/HSET/Colimits.v
@@ -188,6 +193,7 @@ Bicategories/Bicategories/TransportLaws.v
 Bicategories/Bicategories/EquivToAdjequiv.v
 Bicategories/Bicategories/AdjointUnique.v
 Bicategories/Bicategories/Examples/OneTypes.v
+Bicategories/Bicategories/Examples/PointedOneTypesBicat.v
 Bicategories/Bicategories/Examples/TwoType.v
 Bicategories/Bicategories/Examples/BicatOfCats.v
 Bicategories/Bicategories/Examples/Initial.v
@@ -247,5 +253,15 @@ Monoidal/MonoidalFunctors.v
 Monoidal/CategoriesOfMonoids.v
 Monoidal/Actions.v
 Monoidal/Strengths.v
+Monoidal/BicategoryFromMonoidal.v
+Monoidal/BraidedMonoidalCategories.v
 
 Enriched/Enriched.v
+
+# RepresentableFunctors
+RepresentableFunctors/Precategories.v
+RepresentableFunctors/Bifunctor.v
+RepresentableFunctors/Representation.v
+RepresentableFunctors/RawMatrix.v
+RepresentableFunctors/DirectSum.v
+RepresentableFunctors/Test.v
