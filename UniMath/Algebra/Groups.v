@@ -989,11 +989,11 @@ Proof.
   use abgrpair.
   - exact (abgrdiffcarrier X).
   - split.
-    + exists (monoidop_ismonoidop X).
+    + exists (monoidop_ismonoidop (abgrdiffcarrier X)).
       exists (abgrdiffinv X).
-      exact (abgrdiffinv X).
-  (abgrdiffcarrier X) (abgrdiffinv X)
-                                                        (abgrdiffisinv X).
+      apply abgrdiffisinv.
+    + apply commax.
+Defined.
 
 Definition prabgrdiff (X : abmonoid) : X -> X -> abgrdiff X :=
   λ x x' : X, setquotpr (eqrelabgrdiff X) (dirprodpair x x').

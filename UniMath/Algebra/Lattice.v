@@ -675,7 +675,7 @@ Lemma isaprop_istruncminus {X : abmonoid} (is : lattice X) (minus : binop X) :
 Proof.
   apply impred_isaprop ; intros x.
   apply impred_isaprop ; intros y.
-  apply (pr2 (pr1 (pr1 X))).
+  apply setproperty.
 Qed.
 
 Definition extruncminus {X : abmonoid} (is : lattice X) :=
@@ -690,7 +690,7 @@ Proof.
     apply isaset_total2.
     apply impred_isaset ; intros _.
     apply impred_isaset ; intros _.
-    apply (pr2 (pr1 (pr1 X))).
+    apply setproperty.
     intros minus.
     apply isasetaprop.
     apply isaprop_istruncminus.
