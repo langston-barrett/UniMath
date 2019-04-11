@@ -126,6 +126,10 @@ Definition disp_cat_id_comp (C : precategory_data)
 
 Definition disp_cat_data C := total2 (disp_cat_id_comp C).
 
+Definition mk_disp_cat_data {C : precategory}  :
+  ∏ (o : disp_cat_ob_mor C), disp_cat_id_comp _ o -> disp_cat_data C :=
+  fun x y => tpair _ x y.
+
 Definition disp_cat_ob_mor_from_disp_cat_data {C}
   (D : disp_cat_data C)
   : disp_cat_ob_mor C
@@ -173,6 +177,12 @@ Definition disp_precat (C : precategory) := total2 (disp_cat_axioms C).
 Definition disp_cat_data_from_disp_precat {C} (D : disp_precat C)
  := pr1 D : disp_cat_data C.
 Coercion disp_cat_data_from_disp_precat : disp_precat >-> disp_cat_data.
+
+Definition mk_disp_precat
+           {C : precategory}
+           (D : disp_cat_data C)
+           (E : disp_cat_axioms C D) : disp_precat C :=
+  tpair _ D E.
 
 (** Displayed category of a [category] *)
 
@@ -952,6 +962,16 @@ Proof.
   intros ? ?.
   apply isweqpr1, H.
 Defined.
+
+(** ** Iterated displayed categories *)
+
+(** Many displayed categories are e.g. transitively displayed over [HSET]. *)
+
+Definition iterated_disp_precat {C : precategory} (D : disp_precat C) : UU :=
+  disp_precat (total_precategory D).
+
+(* TODO: it should be possible to go from an [iterated_disp_precat] to a
+   [disp_precat] over the "base" category. *)
 
 (** ** Isomorphisms and saturation *)
 
