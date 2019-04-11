@@ -10,7 +10,10 @@
  *)
 
 Require Import UniMath.Foundations.Sets.
+
 Require Import UniMath.Algebra.BinaryOperations.
+Require Import UniMath.Algebra.Semigroups.
+
 Require Import UniMath.CategoryTheory.Core.Categories.
 Require Import UniMath.CategoryTheory.Core.Isos.
 Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
@@ -44,6 +47,18 @@ Proof.
     + intros ? ? ? ? ? ? ?.
       do 2 (apply hlevelntosn).
       apply iscontrunit.
+Defined.
+
+(** The objects are indeed semigroups. *)
+Lemma ob_disp_semigroup :
+  ob (total_precategory disp_semigroup) ≃ semigroup.
+Proof.
+  unfold total_precategory, disp_semigroup, semigroup; cbn.
+  unfold setwithbinop.
+  unfold hSet.
+  eapply weqcomp; [apply weqtotal2asstor|].
+  apply invweq; eapply weqcomp; [apply weqtotal2asstor|].
+  apply idweq.
 Defined.
 
 (** ** Univalence *)
