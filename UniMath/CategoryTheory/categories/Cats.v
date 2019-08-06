@@ -51,6 +51,7 @@ Require Import UniMath.CategoryTheory.categories.StandardCategories. (* unit *)
 Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.limits.terminal.
 Require Import UniMath.CategoryTheory.limits.products.
+Require Import UniMath.CategoryTheory.limits.equalizers.
 Require Import UniMath.CategoryTheory.ProductCategory.
 
 Local Open Scope cat.
@@ -300,6 +301,82 @@ Proof.
             apply iscontrunit.
         }
   + apply weqproperty.
+Defined.
+
+(** **** Equalizer category ([EqualizersCat]) *)
+
+Section Eq.
+  Context {C D : precategory} (F G : functor C D).
+
+  Local Definition Eq : precategory_data.
+  Proof.
+    use make_precategory_data.
+    - use make_precategory_ob_mor.
+      + exact (∑ c : ob C, ∥ F c = G c ∥).
+      + intros c c'; exact (C⟦pr1 c, pr1 c'⟧).
+    - intro; apply identity.
+    - intros ? ? ? f g; exact (f · g).
+  Defined.
+
+  (** The axioms trivially follow from those of C. *)
+  Local Lemma Eq_is_precategory : is_precategory Eq.
+  Proof.
+    use make_is_precategory.
+    * intros; apply id_left.
+    * intros; apply id_right.
+    * intros; apply assoc.
+    * intros; symmetry; apply assoc.
+  Qed.
+
+  Definition Eq_precategory : precategory.
+  Proof.
+    use make_precategory.
+    - exact Eq.
+    - exact Eq_is_precategory.
+  Defined.
+
+  Definition Eq_functor : functor Eq C.
+  Proof.
+    use make_functor.
+    - use make_functor_data.
+      + exact pr1.
+      + intros ? ? f; exact f.
+    - use tpair.
+      + intro; reflexivity.
+      + intros ? ? ?; reflexivity.
+  Defined.
+End Eq.
+
+(** *)
+Definition EqualizersCat : Equalizers cat_precat.
+Proof.
+  intros C D F G.
+  set (C' := precategory_object_from_sub_precategory_object _ _ C).
+  set (D' := precategory_object_from_sub_precategory_object _ _ D).
+  set (F' := precategory_morphism_from_sub_precategory_morphism _ _ _ _ F).
+  set (G' := precategory_morphism_from_sub_precategory_morphism _ _ _ _ G).
+  cbn in C', D', F', G'.
+  use (make_Equalizer F G).
+  - use make_category.
+    + exact (Eq_precategory F' G').
+    + intros ? ? ? ?; apply homset_property.
+  - use tpair.
+    + apply morphism_in_full_subcat, Eq_functor.
+    + exact tt.
+  - use subtypeEquality.
+    + intro; apply propproperty.
+    + cbn.
+      use functor_eq; [apply homset_property|].
+      use functor_data_eq.
+      * intros x.
+        refine (factor_through_squash _ _ (pr2 x)).
+        -- admit.
+        -- intros; assumption.
+      * intros c d f; cbn.
+         apply (homset_property D).
+        Search hinhuniv.
+        Search factor_through_squashl.
+        exact (pr2 x).
 Defined.
 
 (** *)
